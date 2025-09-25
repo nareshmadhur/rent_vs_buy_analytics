@@ -54,7 +54,7 @@ export default function AnalysisTool() {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        const validation = analysisSchema.partial().safeParse(parsedData);
+        const validation = analysisSchema.safeParse(parsedData);
         if (validation.success) {
           initialData = { ...initialDefaultValues, ...validation.data };
         }
