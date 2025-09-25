@@ -5,16 +5,18 @@ import type { UseFormReturn } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info, Euro, Percent } from 'lucide-react';
+import { Info, Euro, Percent, Trash2 } from 'lucide-react';
 import type { AnalysisFormValues } from '@/lib/schema';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 interface InputFormProps {
   form: UseFormReturn<AnalysisFormValues>;
   onValuesChange: (values: AnalysisFormValues) => void;
+  onClear: () => void;
 }
 
 const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }) => (
@@ -33,7 +35,7 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
   </div>
 );
 
-export default function InputForm({ form, onValuesChange }: InputFormProps) {
+export default function InputForm({ form, onValuesChange, onClear }: InputFormProps) {
   useEffect(() => {
     const subscription = form.watch((value) => {
       onValuesChange(value as AnalysisFormValues);
@@ -81,7 +83,7 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                 <FormField control={form.control} name="employmentStatus" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Employment</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
                       </FormControl>
@@ -229,6 +231,12 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
           </form>
         </Form>
       </CardContent>
+      <CardFooter>
+         <Button variant="ghost" size="sm" onClick={onClear} className="text-muted-foreground">
+            <Trash2 className="mr-2 h-4 w-4" />
+            Clear Form
+        </Button>
+      </CardFooter>
     </Card>
   );
 }

@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import CostComparisonChart from './cost-comparison-chart';
 import { formatCurrency } from '@/lib/utils';
-import { TrendingUp, TrendingDown, Wallet, Home, Building, PiggyBank, BadgePercent, Landmark } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Home, Building, PiggyBank, BadgePercent, Landmark, Info } from 'lucide-react';
 import type { CalculationOutput } from '@/lib/calculations';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -26,19 +26,20 @@ const ScoreCard = ({ title, value, description, icon: Icon, colorClass = 'text-p
 );
 
 export default function ResultsDisplay({ results }: ResultsDisplayProps) {
-  if (!results) {
+  if (!results || Object.values(results).some(v => v === undefined || v === null || isNaN(v))) {
     return (
       <Card className="flex flex-col items-center justify-center h-full min-h-[500px] bg-secondary/50 border-dashed">
         <CardHeader className="text-center">
+          <Info className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <CardTitle className="text-2xl">Awaiting Your Analysis</CardTitle>
-          <CardDescription>Fill in your details on the left to see your results.</CardDescription>
+          <CardDescription>Fill in all fields on the left to see your results.</CardDescription>
         </CardHeader>
         <CardContent className="w-full max-w-md space-y-4 p-6">
             <div className="space-y-2">
                 <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-3/4 mx-auto" />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 pt-4">
                 <Skeleton className="h-40 w-full" />
             </div>
         </CardContent>
