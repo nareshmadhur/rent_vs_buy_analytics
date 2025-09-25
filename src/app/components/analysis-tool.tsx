@@ -104,15 +104,18 @@ export default function AnalysisTool() {
   }, [form, toast]);
 
   const onSubmit = (data: AnalysisFormValues) => {
+    console.log('Form submitted with data:', data);
     try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
         const calculatedResults = performCalculations(data);
+        console.log('Calculated results:', calculatedResults);
         setResults(calculatedResults);
         toast({
             title: "Analysis Complete",
             description: "Your results have been updated.",
         });
     } catch (error) {
+        console.error('Caught an error during calculation:', error);
         setResults(null);
         toast({
             variant: "destructive",
