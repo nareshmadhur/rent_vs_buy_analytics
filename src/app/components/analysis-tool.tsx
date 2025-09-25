@@ -113,9 +113,9 @@ export default function AnalysisTool() {
   const handleClearForm = useCallback(() => {
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
-      form.reset({}); // Reset to a blank state, not defaults
+      form.reset({}); 
       setResults(null);
-      setFormErrors(form.formState.errors); // Show validation errors for empty required fields
+      setFormErrors(form.formState.errors);
       toast({
         title: "Form Cleared",
         description: "Your inputs have been cleared.",
