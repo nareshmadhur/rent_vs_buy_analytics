@@ -23,20 +23,20 @@ interface InputFormProps {
 }
 
 const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }) => (
-  <div className="flex items-center gap-1.5">
-    <FormLabel>{label}</FormLabel>
-    <TooltipProvider>
-      <Tooltip delayDuration={100}>
-        <TooltipTrigger type="button">
-          <Info className="w-4 h-4 text-muted-foreground" />
-        </TooltipTrigger>
-        <TooltipContent className="max-w-xs">
-          <p>{tooltip}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  </div>
-);
+    <div className="flex items-center gap-1.5">
+      <FormLabel>{label}</FormLabel>
+      <TooltipProvider>
+        <Tooltip delayDuration={100}>
+          <TooltipTrigger type="button">
+            <Info className="w-4 h-4 text-muted-foreground" />
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <p>{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
 
 export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
 
@@ -76,10 +76,10 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
       <Form {...form}>
         <form onSubmit={onSubmit}>
           <CardContent>
-            <Accordion type="multiple" collapsible className="w-full" defaultValue={['personal', 'housing']}>
+            <Accordion type="multiple" className="w-full" defaultValue={['personal', 'housing', 'assumptions', 'projections']}>
                 <AccordionItem value="personal">
                     <AccordionTrigger>
-                    <h3 className="text-lg font-medium text-primary">1. Personal & Financials</h3>
+                    <h3 className="text-lg font-medium text-primary">1. Personal &amp; Financials</h3>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -137,7 +137,7 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
                 </AccordionItem>
                 <AccordionItem value="housing">
                     <AccordionTrigger>
-                        <h3 className="text-lg font-medium text-primary">2. Housing & Mortgage</h3>
+                        <h3 className="text-lg font-medium text-primary">2. Housing &amp; Mortgage</h3>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -170,7 +170,7 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
                 </AccordionItem>
                 <AccordionItem value="assumptions">
                     <AccordionTrigger>
-                    <h3 className="text-lg font-medium text-primary">3. Advanced: Costs & Taxes</h3>
+                    <h3 className="text-lg font-medium text-primary">3. Advanced: Costs &amp; Taxes</h3>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4">
                     <div className="space-y-6">
