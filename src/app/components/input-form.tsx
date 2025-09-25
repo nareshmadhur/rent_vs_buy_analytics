@@ -180,18 +180,38 @@ export default function InputForm({ form, onValuesChange, onClear }: InputFormPr
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="upfrontCostPercentage" render={({ field }) => (
-                  <FormItem>
-                    <LabelWithTooltip label="Upfront Costs (%)" tooltip="One-time buying costs (kosten koper) as a percentage of the purchase price. Includes transfer tax (2%), notary, etc. Typically 4-6%. Transfer tax may be waived for first-time buyers." />
-                    <div className="relative">
-                      <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <FormControl>
-                        <Input type="number" step="0.1" placeholder="e.g., 5" {...field} className="pr-8" onChange={e => field.onChange(transformFloat.output(e))} value={field.value ?? ''} />
-                      </FormControl>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <FormField
+                  control={form.control}
+                  name="propertyTransferTaxPercentage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <LabelWithTooltip label="Transfer Tax (%)" tooltip="The 'overdrachtsbelasting', typically 2% of the purchase price. May be waived for first-time buyers under 35." />
+                      <div className="relative">
+                        <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <FormControl>
+                          <Input type="number" step="0.1" placeholder="e.g., 2" {...field} className="pr-8" onChange={e => field.onChange(transformFloat.output(e))} value={field.value ?? ''} />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="otherUpfrontCostsPercentage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <LabelWithTooltip label="Other Costs (%)" tooltip="Other one-time buying costs (kosten koper) like notary, valuation, and advisor fees. Typically 3-4%. These are mandatory, even if transfer tax is waived." />
+                      <div className="relative">
+                        <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <FormControl>
+                          <Input type="number" step="0.1" placeholder="e.g., 3" {...field} className="pr-8" onChange={e => field.onChange(transformFloat.output(e))} value={field.value ?? ''} />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField control={form.control} name="maintenancePercentage" render={({ field }) => (
                   <FormItem>
                     <LabelWithTooltip label="Maintenance (%)" tooltip="Annual maintenance costs as a percentage of the purchase price. A common estimate is 1%." />

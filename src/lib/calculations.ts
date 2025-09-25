@@ -28,7 +28,6 @@ export type CalculationOutput = {
 
 // Statutory rates
 const EWF_RATE = 0.0035; // 0.35%
-const TRANSFER_TAX_RATE = 0.02; // 2%
 
 export function performCalculations(data: CalculationInput): CalculationOutput {
     // P1.0: Gross Monthly Mortgage (P&I) and Interest/Principal split
@@ -56,10 +55,15 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
     const monthlyEwfCost = (P * EWF_RATE) / 12;
 
     // P4.0: Total Upfront Costs (Revised)
-    const baseUpfrontCosts = P * (data.upfrontCostPercentage / 100);
-    const transferTaxCost = P * TRANSFER_TAX_RATE;
     const isTransferTaxWaived = data.isFirstTimeBuyer && data.age < 35;
-    const totalUpfrontCosts = isTransferTaxWaived ? baseUpfrontCosts - transferTaxCost : baseUpfrontCosts;
+    
+    const transferTaxCost = isTransferTaxWaived 
+      ? 0 
+      : P * (data.propertyTransferTaxPercentage / 100);
+      
+    const otherCosts = P * (data.otherUpfrontCostsPercentage / 100);
+    
+    const totalUpfrontCosts = transferTaxCost + otherCosts;
 
     // Estimated Monthly Maintenance
     const monthlyMaintenance = (P * (data.maintenancePercentage / 100)) / 12;

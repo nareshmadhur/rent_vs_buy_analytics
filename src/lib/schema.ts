@@ -8,9 +8,9 @@ export const analysisSchema = z.object({
   currentRentalExpenses: z.coerce.number().positive({ message: "Rent must be a positive number." }),
   maxMortgage: z.coerce.number().positive({ message: "Mortgage must be a positive number." }),
   interestRate: z.coerce.number().positive({ message: "Rate must be a positive number." }).max(20, { message: "Rate seems too high." }),
-  upfrontCostPercentage: z.coerce.number().positive({ message: "Percentage must be positive." }).max(20, { message: "Percentage seems too high." }).default(5),
+  propertyTransferTaxPercentage: z.coerce.number().positive({ message: "Percentage must be positive." }).max(10, { message: "Percentage seems too high." }).default(2),
+  otherUpfrontCostsPercentage: z.coerce.number().positive({ message: "Percentage must be positive." }).max(10, { message: "Percentage seems too high." }).default(3),
   maintenancePercentage: z.coerce.number().positive({ message: "Percentage must be positive." }).max(10, { message: "Percentage seems too high." }).default(1),
-  // Stage 2 fields
   isFirstTimeBuyer: z.boolean().default(false),
   marginalTaxRate: z.coerce.number().min(0).max(100).default(37),
   midEligible: z.boolean().default(true),
