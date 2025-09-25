@@ -7,7 +7,7 @@ import { formatCurrency } from "@/lib/utils"
 
 const chartConfig = {
   rent: {
-    label: "Renting",
+    label: "Net Rent",
     color: "hsl(var(--chart-2))",
   },
   principal: {
@@ -15,7 +15,7 @@ const chartConfig = {
     color: "hsl(var(--chart-3))",
   },
   interest: {
-    label: "Interest",
+    label: "Interest Cost",
     color: "hsl(var(--chart-1))",
   },
   maintenance: {
@@ -28,7 +28,7 @@ const chartConfig = {
   },
   taxBenefit: {
       label: "Tax Benefit",
-      color: "hsl(var(--color-chart-3))"
+      color: "hsl(var(--chart-3))"
   }
 } satisfies ChartConfig
 
@@ -43,6 +43,50 @@ interface CostComparisonChartProps {
   };
 }
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      const { name, value } = data;
+      let description = '';
+
+      switch(name) {
+        case 'rent': description = 'Your monthly rent after any subsidies.'; break;
+        case 'principal': description = 'The part of your payment that builds home equity.'; break;
+        case 'interest': description = 'The cost of borrowing, before tax deductions.'; break;
+        case 'maintenance': description = 'Estimated monthly cost for upkeep.'; break;
+        case 'ewf': description = 'The notional rental value tax you pay as a homeowner.'; break;
+        default: description = 'A component of your housing cost.';
+      }
+      
+      const buyingStackId = data.payload.stackId;
+      const totalBuyingCost = payload.reduce((acc: number, entry: any) => {
+        if(entry.payload.stackId === 'buy') {
+            return acc + entry.value;
+        }
+        return acc;
+      }, 0);
+      const taxBenefit = data.payload.taxBenefit;
+
+
+      return (
+        <div className="p-3 bg-card border rounded-lg shadow-lg max-w-xs">
+          <p className="font-bold text-base mb-1">{chartConfig[name as keyof typeof chartConfig]?.label}: {formatCurrency(value)}</p>
+          <p className="text-sm text-muted-foreground mb-2">{description}</p>
+          {buyingStackId === 'buy' && (
+             <div className="border-t pt-2 mt-2">
+                <p className="text-xs">
+                    The total gross monthly buying cost is <span className="font-bold">{formatCurrency(totalBuyingCost)}</span>.
+                    After a tax benefit of <span className="font-bold text-green-600">-{formatCurrency(taxBenefit)}</span>, the net cost is <span className="font-bold">{formatCurrency(totalBuyingCost - taxBenefit)}</span>.
+                </p>
+             </div>
+          )}
+        </div>
+      );
+    }
+  
+    return null;
+  };
+
 export default function CostComparisonChart({ rentingCost, buyingCostBreakdown }: CostComparisonChartProps) {
   const chartData = [
     {
@@ -53,8 +97,6 @@ export default function CostComparisonChart({ rentingCost, buyingCostBreakdown }
       maintenance: buyingCostBreakdown.maintenance,
       ewf: buyingCostBreakdown.ewf,
       taxBenefit: buyingCostBreakdown.taxBenefit,
-      // The total net cost of buying for tooltip purposes
-      netBuyingCost: buyingCostBreakdown.principal + buyingCostBreakdown.interest + buyingCostBreakdown.maintenance + buyingCostBreakdown.ewf - buyingCostBreakdown.taxBenefit
     },
   ]
 
@@ -75,22 +117,8 @@ export default function CostComparisonChart({ rentingCost, buyingCostBreakdown }
           tickMargin={10}
         />
         <Tooltip
-          cursor={false}
-          content={<ChartTooltipContent
-            formatter={(value, name, props) => {
-                if (name === 'rent') return `${formatCurrency(value as number)} - Net Rent`
-                if (name === 'netBuyingCost') return `${formatCurrency(value as number)} - Net Buy`
-                if (name === 'taxBenefit') return `-${formatCurrency(value as number)} (Benefit)`
-                return formatCurrency(value as number)
-            }}
-            indicator="dot"
-            payload={// Custom payload to show totals
-                [
-                    {name: 'rent', value: chartData[0].rent, color: chartConfig.rent.color},
-                    {name: 'netBuyingCost', value: chartData[0].netBuyingCost, color: chartConfig.interest.color},
-                ]
-            }
-          />}
+          cursor={{ fill: 'hsla(var(--muted-foreground), 0.1)' }}
+          content={<CustomTooltip />}
         />
         <Legend />
         

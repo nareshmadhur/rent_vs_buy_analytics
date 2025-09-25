@@ -33,6 +33,7 @@ const initialDefaultValues: AnalysisFormValues = {
   propertyAppreciationRate: 2,
   isEligibleForHuurtoeslag: false,
   householdSize: 'single',
+  estimatedSellingCostsPercentage: 2,
 };
 
 
@@ -70,19 +71,23 @@ export default function AnalysisTool() {
 
   }, [form, isClient]); 
 
+  const onValuesChange = (values: any) => {
+     try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(values));
+    } catch (error) {
+        console.error("Failed to save to localStorage", error);
+    }
+  }
+
   useEffect(() => {
     if (!isClient) return;
 
     const subscription = form.watch((values) => {
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(values));
-        } catch (error) {
-            console.error("Failed to save to localStorage", error);
-        }
+        onValuesChange(values)
     });
 
     return () => subscription.unsubscribe();
-  }, [form, isClient]);
+  }, [form, isClient, onValuesChange]);
 
   const handleClearForm = useCallback(() => {
     try {
@@ -131,7 +136,7 @@ export default function AnalysisTool() {
         <h1 className="text-3xl font-bold text-primary font-headline">Hypotheek Analyse</h1>
         <p className="text-muted-foreground">Analyse the net monthly costs of buying vs. renting and see your equity grow.</p>
       </header>
-      <div className="flex-grow container mx-auto p-4 md:p-6">
+      <main className="flex-grow container mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
             <InputForm form={form} onSubmit={form.handleSubmit(onSubmit)} onClear={handleClearForm} />
@@ -140,8 +145,8 @@ export default function AnalysisTool() {
             <ResultsDisplay results={results} />
           </div>
         </div>
-      </div>
-      <footer className="sticky bottom-0 mt-8">
+      </main>
+      <footer className="mt-8">
         <Card className="rounded-none border-t-4 border-accent bg-secondary">
           <CardContent className="p-4 flex items-center gap-4">
             <AlertTriangle className="w-8 h-8 text-accent-foreground" />
