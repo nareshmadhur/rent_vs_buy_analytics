@@ -58,12 +58,33 @@ This structure prevents information overload and builds the user's understanding
 
 ### Component Architecture
 
-*   `src/app/page.tsx`: The main entry point.
-*   `src/app/components/analysis-tool.tsx`: The main stateful client component that orchestrates the form and results. It uses `react-hook-form` for state management and `localStorage` to persist user inputs.
-*   `src/app/components/input-form.tsx`: The left-column form with all user inputs, organized into accordions. It includes real-time validation via `zod`.
-*   `src/app/components/results-display.tsx`: The right-column display area. It contains several sub-components (`VerdictCard`, `StatCard`, etc.) to implement the chronological journey UX. It is responsible for rendering the charts and all calculated KPIs.
-*   `src/lib/schema.ts`: Defines the `zod` schema for all form inputs, providing a single source of truth for validation rules.
-*   `src/lib/calculations.ts`: A pure function, `performCalculations`, that takes the validated form data and returns a comprehensive object with all calculated KPIs and projection data.
+To maintain the project's clarity and modularity, please adhere to the following file structure and separation of concerns:
+
+*   `src/app/page.tsx`: The main entry point for the application. Keep this file minimal.
+
+*   `src/app/components/analysis-tool.tsx`: This is the **primary stateful client component**.
+    *   It is responsible for orchestrating the entire user experience.
+    *   It manages the main application state, including form data and calculation results.
+    *   It uses `react-hook-form` for efficient form state management and `localStorage` to persist user inputs across sessions.
+    *   It passes down form control to `InputForm` and calculation results to `ResultsDisplay`.
+
+*   `src/app/components/input-form.tsx`: This component manages all user inputs.
+    *   It should contain the form UI, organized into logical sections (e.g., accordions).
+    *   It receives the `form` object from `analysis-tool.tsx` and handles the form submission and clear events.
+    *   Keep this component focused on presentation and user interaction for the input side.
+
+*   `src/app/components/results-display.tsx`: This component is responsible for rendering all output.
+    *   It receives the `results` object and is responsible for displaying all KPIs, charts, and explanations.
+    *   It contains the sub-components that make up the chronological journey (`VerdictCard`, `StatCard`, etc.).
+    *   This component should remain a "dumb" component that simply visualizes the data passed to it.
+
+*   `src/lib/schema.ts`: This file contains the **single source of truth for data validation**.
+    *   All form input rules are defined here using a `zod` schema.
+    *   This ensures that the data passed to the calculation engine is always in the correct format.
+
+*   `src/lib/calculations.ts`: This file houses the core financial logic.
+    *   It exports a pure function, `performCalculations`, which takes the validated form data and returns a comprehensive `CalculationOutput` object.
+    *   **Crucially, this file should have no side effects and should not depend on React or any UI components.** This separation makes the logic easy to test, debug, and modify independently of the UI.
 
 ---
 
