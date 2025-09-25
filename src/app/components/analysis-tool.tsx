@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { AnalysisFormValues } from '@/lib/schema';
@@ -44,6 +44,7 @@ export default function AnalysisTool() {
   const [formErrors, setFormErrors] = useState<FieldErrors<AnalysisFormValues> | null>(null);
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
+  const isResettingRef = useRef(false);
 
   const form = useForm<AnalysisFormValues>({
     resolver: zodResolver(analysisSchema),
@@ -72,7 +73,6 @@ export default function AnalysisTool() {
     setFormErrors(errors);
   };
 
-  // Effect to load from localStorage ONLY on initial mount
   useEffect(() => {
     setIsClient(true);
     let initialData = initialDefaultValues;
@@ -80,7 +80,6 @@ export default function AnalysisTool() {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        // Validate and set form values
         const validatedData = analysisSchema.safeParse(parsedData);
         if (validatedData.success) {
             initialData = validatedData.data;
@@ -92,27 +91,36 @@ export default function AnalysisTool() {
     form.reset(initialData);
     handleValidationAndSubmit(initialData);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array ensures this runs only once.
+  }, []);
 
 
-  // Effect to watch for changes and update results/localStorage
   useEffect(() => {
     const subscription = form.watch(() => {
-        form.trigger().then(isValid => {
-            if (isValid) {
-                handleValidationAndSubmit(form.getValues());
-            } else {
-                handleValidationErrors(form.formState.errors);
-            }
-        });
+      if (isResettingRef.current) {
+        return;
+      }
+      form.trigger().then(isValid => {
+          if (isValid) {
+              handleValidationAndSubmit(form.getValues());
+          } else {
+              handleValidationErrors(form.formState.errors);
+          }
+      });
     });
     return () => subscription.unsubscribe();
   }, [form, handleValidationAndSubmit]);
+
+  useEffect(() => {
+    if (isResettingRef.current && !form.formState.isDirty) {
+      isResettingRef.current = false;
+    }
+  }, [form.formState.isDirty]);
 
 
   const handleClearForm = useCallback(() => {
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
+      isResettingRef.current = true;
       form.reset({}); 
       setResults(null);
       setFormErrors(form.formState.errors);
@@ -120,6 +128,7 @@ export default function AnalysisTool() {
         title: "Form Cleared",
         description: "Your inputs have been cleared.",
       });
+      // The ref will be reset by the useEffect watching isDirty state
     } catch (error) {
       console.error("Failed to clear localStorage", error);
       toast({
@@ -131,7 +140,7 @@ export default function AnalysisTool() {
   }, [form, toast]);
 
   if (!isClient) {
-    return null; // or a loading spinner
+    return null;
   }
 
   return (

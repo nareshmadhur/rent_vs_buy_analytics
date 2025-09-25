@@ -67,7 +67,7 @@ export default function InputForm({ form, onClear }: InputFormProps) {
   };
 
   return (
-    <Card className="sticky top-6">
+    <Card>
       <CardHeader>
         <CardTitle>Input Wizard</CardTitle>
         <CardDescription>Enter your details to see the live analysis.</CardDescription>
