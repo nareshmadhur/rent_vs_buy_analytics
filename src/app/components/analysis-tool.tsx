@@ -25,8 +25,10 @@ export default function AnalysisTool() {
   const form = useForm<AnalysisFormValues>({
     resolver: zodResolver(analysisSchema),
     mode: 'onChange',
+    // No default values to ensure the form starts empty
   });
 
+  // Effect to load data from localStorage on initial mount
   useEffect(() => {
     setIsClient(true);
     try {
@@ -35,8 +37,9 @@ export default function AnalysisTool() {
         const parsedData = JSON.parse(savedData);
         const validation = analysisSchema.safeParse(parsedData);
         if (validation.success) {
-          form.reset(validation.data);
+          form.reset(validation.data); // Load valid saved data
         } else {
+          // If saved data is invalid, remove it and start fresh
           localStorage.removeItem(LOCAL_STORAGE_KEY);
         }
       }
@@ -46,6 +49,7 @@ export default function AnalysisTool() {
     }
   }, [form]);
 
+  // Effect to watch for changes and perform calculations
   useEffect(() => {
     if (!isClient) return;
 
@@ -53,23 +57,25 @@ export default function AnalysisTool() {
       const validation = analysisSchema.safeParse(values);
 
       if (validation.success) {
+        // If form is valid, calculate results and save to localStorage
         setResults(performCalculations(validation.data));
         setFormErrors(null);
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(validation.data));
       } else {
+        // If form is invalid, clear results and show errors
         setResults(null);
         setFormErrors(validation.error.formErrors.fieldErrors);
-        // Do not remove from local storage on validation error during typing
-        // to allow fixing inputs without losing all data.
+        // Do not save invalid data to localStorage
       }
     });
 
     return () => subscription.unsubscribe();
   }, [form, isClient]);
 
+
   const handleClearForm = useCallback(() => {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
-    form.reset({});
+    form.reset({}); // Reset to a completely empty object
     setResults(null);
     setFormErrors(null);
     toast({
@@ -79,6 +85,7 @@ export default function AnalysisTool() {
   }, [form, toast]);
 
   if (!isClient) {
+    // Render nothing on the server to avoid hydration mismatch
     return null;
   }
 
