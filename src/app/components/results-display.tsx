@@ -82,7 +82,6 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
   const {
     totalUpfrontCosts,
     totalNetMonthlyBuyingCost,
-    monthlyCostDifferential,
     monthlyEquityAccumulation,
     monthlyTaxBenefit,
     monthlyEwfCost,
@@ -95,9 +94,9 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
     monthlyMaintenance,
   } = results;
 
-  const isBuyingCheaper = monthlyCostDifferential < 0;
   const finalEquity = projection.length > 0 ? projection[projection.length - 1].accumulatedEquity : 0;
   const stayDuration = projection.length > 0 ? projection[projection.length - 1].year : 0;
+  const doesBreakeven = breakevenPoint !== null;
 
   return (
     <div className="space-y-6">
@@ -121,13 +120,13 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className={breakevenPoint ? "bg-green-100 dark:bg-green-900/20 border-green-500" : "bg-amber-100 dark:bg-amber-900/20 border-amber-500"}>
+        <Card className={doesBreakeven ? "bg-green-100 dark:bg-green-900/20 border-green-500" : "bg-amber-100 dark:bg-amber-900/20 border-amber-500"}>
             <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-            <Trophy className={`w-8 h-8 ${breakevenPoint ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'}`} />
+            <Trophy className={`w-8 h-8 ${doesBreakeven ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'}`} />
             <div>
                 <CardTitle>Financial Breakeven Point</CardTitle>
-                <CardDescription className={breakevenPoint ? "text-green-800 dark:text-green-300" : "text-amber-800 dark:text-amber-300"}>
-                {breakevenPoint
+                <CardDescription className={doesBreakeven ? "text-green-800 dark:text-green-300" : "text-amber-800 dark:text-amber-300"}>
+                {doesBreakeven
                     ? `Buying becomes cheaper than renting in Year ${breakevenPoint}.`
                     : `Buying does not break even with renting within your ${stayDuration}-year timeline.`}
                 </CardDescription>
