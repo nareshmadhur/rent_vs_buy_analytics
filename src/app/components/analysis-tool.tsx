@@ -133,12 +133,14 @@ export default function AnalysisTool() {
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
       form.reset(initialDefaultValues);
-      setResults(null);
-      setFormErrors(form.formState.errors); // Re-set errors for the initial state
+      setResults(null); // Explicitly set results to null
+      setFormErrors(null); // Explicitly clear any validation errors
       toast({
         title: "Form Cleared",
         description: "Your inputs have been reset.",
       });
+      // A slight delay to ensure the UI updates before any potential re-validation
+      setTimeout(() => handleValidationErrors(form.formState.errors), 50);
     } catch (error) {
       console.error("Failed to clear localStorage", error);
       toast({
