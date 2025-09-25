@@ -59,8 +59,7 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
     }
   }, [isFirstTimeBuyer, form]);
 
-  const transform = {
-    input: (value: any) => (value === 0 && form.getFieldState(value).isDirty ? 0 : value || ''),
+  const transformInt = {
     output: (e: React.ChangeEvent<HTMLInputElement>) => {
       const output = parseInt(e.target.value, 10);
       return isNaN(output) ? undefined : output;
@@ -68,9 +67,10 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
   };
 
   const transformFloat = {
-    input: (value: any) => (value === 0 && form.getFieldState(value).isDirty ? 0 : value || ''),
     output: (e: React.ChangeEvent<HTMLInputElement>) => {
-      const output = parseFloat(e.target.value);
+      const value = e.target.value;
+      if (value === "") return undefined;
+      const output = parseFloat(value);
       return isNaN(output) ? undefined : output;
     },
   };
@@ -91,7 +91,7 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
                   <FormItem>
                     <FormLabel>Age</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g., 30" {...field} onChange={e => field.onChange(transform.output(e))} value={field.value ?? ''} />
+                      <Input type="number" placeholder="e.g., 30" {...field} onChange={e => field.onChange(transformInt.output(e))} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -118,7 +118,7 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
                     <div className="relative">
                       <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 60000" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={field.value ?? ''} />
+                        <Input type="number" placeholder="e.g., 60000" {...field} className="pl-8" onChange={e => field.onChange(transformInt.output(e))} value={field.value ?? ''} />
                       </FormControl>
                     </div>
                     <FormMessage />
@@ -130,7 +130,7 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
                     <div className="relative">
                       <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 25000" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={field.value ?? ''} />
+                        <Input type="number" placeholder="e.g., 25000" {...field} className="pl-8" onChange={e => field.onChange(transformInt.output(e))} value={field.value ?? ''} />
                       </FormControl>
                     </div>
                     <FormMessage />
@@ -148,7 +148,7 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
                     <div className="relative">
                       <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 1500" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={field.value ?? ''} />
+                        <Input type="number" placeholder="e.g., 1500" {...field} className="pl-8" onChange={e => field.onChange(transformInt.output(e))} value={field.value ?? ''} />
                       </FormControl>
                     </div>
                     <FormMessage />
@@ -160,7 +160,7 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
                     <div className="relative">
                       <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 300000" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={field.value ?? ''} />
+                        <Input type="number" placeholder="e.g., 300000" {...field} className="pl-8" onChange={e => field.onChange(transformInt.output(e))} value={field.value ?? ''} />
                       </FormControl>
                     </div>
                     <FormMessage />
@@ -276,7 +276,7 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
                             <div className="relative">
                               <CalendarClock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                               <FormControl>
-                                <Input type="number" placeholder="e.g., 10" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={field.value ?? ''} />
+                                <Input type="number" placeholder="e.g., 10" {...field} className="pl-8" onChange={e => field.onChange(transformInt.output(e))} value={field.value ?? ''} />
                               </FormControl>
                             </div>
                             <FormMessage />
@@ -345,3 +345,5 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
     </Card>
   );
 }
+
+    
