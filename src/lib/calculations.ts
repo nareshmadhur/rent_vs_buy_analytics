@@ -42,6 +42,9 @@ export type CalculationOutput = {
     // Stage 3: Long-term projection
     projection: YearlyProjection[];
     breakevenPoint: number | null; // This is now the "True Financial Breakeven"
+    
+    // Pass inputs through for display
+    inputs: CalculationInput;
 };
 
 // Statutory rates
@@ -75,25 +78,27 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
     const monthlyInterest = M * monthlyRate;
     const monthlyPrincipal = grossMonthlyMortgage - monthlyInterest;
 
-    // Agreed Purchase Price (P) is mortgage + overbid + savings contribution
-    const P = data.maxMortgage + (data.overbidAmount || 0) + data.savings;
+    // Agreed Purchase Price (P) is the property's official value, mortgage is based on this.
+    // The total cost to the user includes the overbid.
+    const P = data.maxMortgage + (data.savings - (data.overbidAmount || 0)); // Simplified: assume rest of savings go to value.
+    const propertyValue = data.maxMortgage;
 
     // L1.0 & P2.0: Monthly Tax Benefit (MID)
     const monthlyTaxBenefit = data.midEligible && monthlyInterest > 0
       ? monthlyInterest * (data.marginalTaxRate / 100)
       : 0;
       
-    // P3.0: Monthly Eigenwoningforfait Cost (EWF)
-    const monthlyEwfCost = (P * EWF_RATE) / 12;
+    // P3.0: Monthly Eigenwoningforfait Cost (EWF) - Based on official property value (WOZ), not overbid price
+    const monthlyEwfCost = (propertyValue * EWF_RATE) / 12;
 
     // P4.0: Total Upfront Costs - REVISED
     const isTransferTaxWaived = data.isFirstTimeBuyer && data.age < 35;
-    const transferTaxCost = isTransferTaxWaived ? 0 : P * (data.propertyTransferTaxPercentage / 100);
-    const otherCosts = P * (data.otherUpfrontCostsPercentage / 100);
+    const transferTaxCost = isTransferTaxWaived ? 0 : propertyValue * (data.propertyTransferTaxPercentage / 100);
+    const otherCosts = propertyValue * (data.otherUpfrontCostsPercentage / 100);
     const totalUpfrontCosts = transferTaxCost + otherCosts + (data.overbidAmount || 0);
 
     // Estimated Monthly Maintenance
-    const monthlyMaintenance = (P * (data.maintenancePercentage / 100)) / 12;
+    const monthlyMaintenance = (propertyValue * (data.maintenancePercentage / 100)) / 12;
     
     // P5.0: Total Net Buying Housing Cost (Cash Outflow)
     const totalGrossMonthlyBuyingCost = grossMonthlyMortgage + monthlyMaintenance;
@@ -120,7 +125,7 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
     const annualNetRentingCost = netMonthlyRentalCost * 12;
     let cumulativeBuyingCashOutflow = totalUpfrontCosts;
     let cumulativeRentingCost = 0;
-    let currentPropertyValue = P;
+    let currentPropertyValue = propertyValue;
 
     for (let year = 1; year <= data.intendedLengthOfStay; year++) {
         // C4.0: Cumulative Cost Tracking (Cash Outflow)
@@ -157,7 +162,7 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
     
     // Final realized value at end of term
     const finalEquity = projection.length > 0 ? projection[projection.length - 1].accumulatedEquity : 0;
-    const finalPropertyValue = projection.length > 0 ? projection[projection.length - 1].propertyValue : P;
+    const finalPropertyValue = projection.length > 0 ? projection[projection.length - 1].propertyValue : propertyValue;
     const finalSellingCosts = finalPropertyValue * (data.estimatedSellingCostsPercentage / 100);
     const realizedValueOnSale = finalEquity - finalSellingCosts;
 
@@ -165,7 +170,7 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
         grossMonthlyMortgage,
         monthlyInterest,
         monthlyPrincipal,
-        estimatedSalePrice: P,
+        estimatedSalePrice: propertyValue,
         totalUpfrontCosts,
         monthlyMaintenance,
         monthlyTaxBenefit,
@@ -179,5 +184,6 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
         projection,
         breakevenPoint,
         realizedValueOnSale,
+        inputs: data,
     };
 }

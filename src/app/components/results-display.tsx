@@ -5,7 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import CostComparisonChart from './cost-comparison-chart';
 import { formatCurrency } from '@/lib/utils';
-import { Wallet, Home, Building, PiggyBank, BadgePercent, Landmark, Info, BarChart, Trophy, FileText, HelpCircle } from 'lucide-react';
+import { Wallet, Home, Building, PiggyBank, BadgePercent, Landmark, Info, BarChart, Trophy, FileText, HelpCircle, TrendingUp, Sparkles, Scale } from 'lucide-react';
 import type { CalculationOutput } from '@/lib/calculations';
 import { Skeleton } from '@/components/ui/skeleton';
 import ProjectionChart from './projection-chart';
@@ -16,18 +16,17 @@ interface ResultsDisplayProps {
   results: CalculationOutput | null;
 }
 
-const ScoreCard = ({ title, value, description, icon: Icon, colorClass = 'text-primary' }: { title: string, value: string, description: string, icon: React.ElementType, colorClass?: string }) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      <Icon className={`h-5 w-5 text-muted-foreground ${colorClass}`} />
-    </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
-      <p className="text-xs text-muted-foreground">{description}</p>
-    </CardContent>
-  </Card>
+const StatCard = ({ title, value, description, icon: Icon, colorClass = 'text-primary' }: { title: string, value: string, description?: string, icon: React.ElementType, colorClass?: string }) => (
+  <div className="flex items-start gap-4">
+    <Icon className={`h-8 w-8 mt-1 shrink-0 ${colorClass}`} />
+    <div>
+      <p className="text-sm text-muted-foreground">{title}</p>
+      <p className="text-2xl font-bold">{value}</p>
+      {description && <p className="text-xs text-muted-foreground">{description}</p>}
+    </div>
+  </div>
 );
+
 
 const QualitativeFactors = () => (
     <Card>
@@ -36,7 +35,7 @@ const QualitativeFactors = () => (
                 <FileText className="w-5 h-5" />
                 Beyond the Numbers
             </CardTitle>
-            <CardDescription>The final decision isn't just financial. Here are some qualitative factors to consider.</CardDescription>
+            <CardDescription>The final decision is not just financial. Here are some qualitative factors to consider.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
             <div>
@@ -57,7 +56,59 @@ const QualitativeFactors = () => (
             </div>
         </CardContent>
     </Card>
-)
+);
+
+const VerdictCard = ({ results }: { results: CalculationOutput }) => {
+    const { breakevenPoint, projection, realizedValueOnSale, totalNetMonthlyBuyingCost, netMonthlyRentalCost } = results;
+    const stayDuration = projection.length > 0 ? projection[projection.length - 1].year : 0;
+    const doesBreakeven = breakevenPoint !== null && breakevenPoint <= stayDuration;
+
+    const buyingIsCheaperMonthly = totalNetMonthlyBuyingCost < netMonthlyRentalCost;
+    const monthlyDifference = Math.abs(totalNetMonthlyBuyingCost - netMonthlyRentalCost);
+
+    let verdictTitle = '';
+    let verdictDescription = '';
+
+    if (doesBreakeven) {
+        verdictTitle = `Buying becomes the cheaper option in Year ${breakevenPoint}.`;
+        verdictDescription = `Over your ${stayDuration}-year timeline, the financial benefits of owning outweigh the initial costs.`;
+    } else {
+        verdictTitle = `Renting is the cheaper option for your ${stayDuration}-year timeline.`;
+        verdictDescription = "The high upfront costs of buying are not recovered through equity and appreciation within your planned stay, making renting cheaper overall."
+    }
+
+    return (
+        <Card className={`border-2 ${doesBreakeven ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'}`}>
+            <CardHeader>
+                <div className="flex items-center gap-3">
+                    <Trophy className={`w-8 h-8 ${doesBreakeven ? 'text-green-600' : 'text-amber-600'}`} />
+                    <div>
+                        <CardTitle className="text-xl">{verdictTitle}</CardTitle>
+                        <CardDescription className="text-sm">{verdictDescription}</CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+                    <div className="flex flex-col items-center">
+                        <p className="text-sm text-muted-foreground">Monthly Cost</p>
+                        <p className={`text-lg font-bold ${buyingIsCheaperMonthly ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(monthlyDifference)} / mo {buyingIsCheaperMonthly ? 'cheaper to buy' : 'cheaper to rent'}</p>
+                    </div>
+                     <div className="flex flex-col items-center">
+                        <p className="text-sm text-muted-foreground">Breakeven Point</p>
+                        <p className="text-lg font-bold">{doesBreakeven ? `Year ${breakevenPoint}` : `> ${stayDuration} Years`}</p>
+                    </div>
+                     <div className="flex flex-col items-center">
+                        <p className="text-sm text-muted-foreground">Gain on Sale</p>
+                        <p className="text-lg font-bold text-green-600">{formatCurrency(realizedValueOnSale)}</p>
+                        <p className="text-xs text-muted-foreground">after {stayDuration} years</p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
 
 export default function ResultsDisplay({ results }: ResultsDisplayProps) {
   if (!results) {
@@ -85,173 +136,165 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
     totalUpfrontCosts,
     totalNetMonthlyBuyingCost,
     monthlyEquityAccumulation,
-    monthlyTaxBenefit,
-    monthlyEwfCost,
     netMonthlyRentalCost,
-    huurtoeslagAmount,
     projection,
     breakevenPoint,
     monthlyInterest,
     monthlyPrincipal,
     monthlyMaintenance,
-    realizedValueOnSale,
+    monthlyEwfCost,
+    monthlyTaxBenefit,
   } = results;
 
   const stayDuration = projection.length > 0 ? projection[projection.length - 1].year : 0;
-  const doesBreakeven = breakevenPoint !== null && breakevenPoint <= stayDuration;
   const breakevenData = breakevenPoint ? projection[breakevenPoint - 1] : null;
 
   return (
-    <div className="space-y-6">
-       <Card>
+    <div className="space-y-8">
+      
+      {/* 1. Top Level Verdict */}
+      <VerdictCard results={results} />
+      
+      {/* 2. The Starting Line: Upfront Investment */}
+      <Card>
         <CardHeader>
-          <CardTitle>Net Monthly Cost Comparison</CardTitle>
-          <CardDescription>Visualizing your initial monthly housing expenses after tax and subsidy adjustments.</CardDescription>
-        </CardHeader>
-        <CardContent className="pl-2">
-          <CostComparisonChart
-            rentingCost={netMonthlyRentalCost}
-            buyingCostBreakdown={{
-                principal: monthlyPrincipal,
-                interest: monthlyInterest,
-                maintenance: monthlyMaintenance,
-                ewf: monthlyEwfCost,
-                taxBenefit: monthlyTaxBenefit,
-            }}
-          />
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className={doesBreakeven ? "bg-green-100 dark:bg-green-900/20 border-green-500" : "bg-amber-100 dark:bg-amber-900/20 border-amber-500"}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>True Financial Breakeven</CardTitle>
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger>
-                            <HelpCircle className="w-5 h-5 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                            <p>The "True Breakeven" is the year when the total cost of renting finally exceeds the total net cost of owning. The net cost of owning is your total cash payments (upfront costs + monthly costs) <span className="font-bold">minus</span> the cash you would get back if you sold the house (equity + appreciation - selling costs).</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className={`text-sm mb-4 ${doesBreakeven ? "text-green-800 dark:text-green-300" : "text-amber-800 dark:text-amber-300"}`}>
-                {doesBreakeven && breakevenData
-                    ? `Buying becomes cheaper than renting in Year ${breakevenPoint}. Here's the math for that year:`
-                    : `Buying does not financially break even with renting within your ${stayDuration}-year timeline.`}
-              </p>
-              {doesBreakeven && breakevenData && (
-                <div className="text-xs space-y-2 text-muted-foreground">
-                  <div className="flex justify-between">
-                    <span>Total Rent Paid by Year {breakevenPoint}:</span>
-                    <span className="font-medium text-foreground">{formatCurrency(breakevenData.cumulativeRentingCost)}</span>
-                  </div>
-                  <div className="border-t pt-2 mt-2">
-                    <div className="flex justify-between">
-                      <span>Total Buying Costs Paid:</span>
-                      <span className="font-medium text-foreground">{formatCurrency(breakevenData.cumulativeBuyingCost)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>- Est. Value from Sale:</span>
-                      <span className="font-medium text-green-600">-{formatCurrency(breakevenData.propertyValue - breakevenData.totalNetOwnershipCost - totalUpfrontCosts)}</span>
-                    </div>
-                    <div className="border-t my-1"></div>
-                    <div className="flex justify-between font-bold">
-                      <span>= True Cost of Owning:</span>
-                      <span className="text-foreground">{formatCurrency(breakevenData.totalNetOwnershipCost)}</span>
-                    </div>
-                  </div>
-                   <p className="text-xs pt-2">
-                    This is the "breakeven" because the True Cost of Owning ({formatCurrency(breakevenData.totalNetOwnershipCost)}) is now less than the Total Rent Paid ({formatCurrency(breakevenData.cumulativeRentingCost)}).
-                  </p>
-                </div>
-              )}
-               {!doesBreakeven && (
-                 <p className="text-xs text-muted-foreground">
-                   Based on your projections, the high upfront costs of buying are not recovered through equity and appreciation within your planned stay, making renting the cheaper option over this period.
-                 </p>
-               )}
-            </CardContent>
-        </Card>
-         <Card>
-            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-            <PiggyBank className="w-8 h-8 text-primary" />
-            <div>
-                <CardTitle>Net Realized Value</CardTitle>
-                <CardDescription>
-                    After {stayDuration} years, selling could net you
-                    <span className="font-bold text-foreground"> {formatCurrency(realizedValueOnSale)} </span>
-                    in cash.
-                </CardDescription>
+            <div className="flex items-center gap-3">
+                <Wallet className="w-6 h-6 text-primary"/>
+                <CardTitle>The Starting Line: Your Upfront Investment</CardTitle>
             </div>
-            </CardHeader>
-        </Card>
-      </div>
-
-       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart className="w-5 h-5" />
-            {stayDuration}-Year Financial Projection
-          </CardTitle>
-          <CardDescription>Comparing the total cumulative costs and equity growth over time, including asset realization.</CardDescription>
+          <CardDescription>This is the initial cash required to purchase the home, paid on day one.</CardDescription>
         </CardHeader>
-        <CardContent className="pl-2">
-          <ProjectionChart data={projection} breakevenYear={breakevenPoint} />
+        <CardContent className="grid md:grid-cols-2 gap-6">
+            <StatCard 
+                title="Total Upfront Costs"
+                value={formatCurrency(totalUpfrontCosts)}
+                description="Includes overbid, transfer tax, and other fees."
+                icon={Sparkles}
+                colorClass="text-amber-500"
+            />
+             <StatCard 
+                title="Remaining Savings"
+                value={formatCurrency(results.inputs.savings - totalUpfrontCosts)}
+                description="After all initial costs are paid."
+                icon={PiggyBank}
+                colorClass="text-green-500"
+            />
         </CardContent>
       </Card>
 
+      {/* 3. The Daily Race: Monthly Cash Flow */}
        <Card>
         <CardHeader>
-          <CardTitle>Net Results Scorecard</CardTitle>
-          <CardDescription>A detailed breakdown of your rent vs. buy comparison with tax and subsidy effects.</CardDescription>
+           <div className="flex items-center gap-3">
+                <Scale className="w-6 h-6 text-primary"/>
+                <CardTitle>The Daily Race: Net Monthly Cost Comparison</CardTitle>
+            </div>
+          <CardDescription>Visualizing your initial monthly housing expenses after all tax and subsidy adjustments.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <ScoreCard
-            title="Net Monthly Buy Cost"
-            value={formatCurrency(totalNetMonthlyBuyingCost)}
-            description="After tax benefit & EWF."
-            icon={Home}
-          />
-           <ScoreCard
-            title="Net Monthly Rent Cost"
-            value={formatCurrency(netMonthlyRentalCost)}
-            description={huurtoeslagAmount > 0 ? `After ${formatCurrency(huurtoeslagAmount)} subsidy` : 'Your current situation.'}
-            icon={Building}
-          />
-          <ScoreCard
-            title="Monthly Equity"
-            value={formatCurrency(monthlyEquityAccumulation)}
-            description="Initial investment in your home."
-            icon={PiggyBank}
-            colorClass="text-green-600"
-          />
-          <ScoreCard
-            title="Upfront Buying Costs"
-            value={formatCurrency(totalUpfrontCosts)}
-            description="One-time expenses (net)."
-            icon={Wallet}
-            colorClass="text-amber-600"
-          />
-          <ScoreCard
-            title="Monthly Tax Benefit"
-            value={formatCurrency(monthlyTaxBenefit)}
-            description="From interest deduction."
-            icon={BadgePercent}
-            colorClass="text-green-600"
-          />
-          <ScoreCard
-            title="Monthly EWF Tax"
-            value={formatCurrency(monthlyEwfCost)}
-            description="Notional rental income tax."
-            icon={Landmark}
-            colorClass="text-red-600"
-          />
+        <CardContent className="space-y-6">
+            <div className="min-h-[400px]">
+                <CostComparisonChart
+                    rentingCost={netMonthlyRentalCost}
+                    buyingCostBreakdown={{
+                        principal: monthlyPrincipal,
+                        interest: monthlyInterest,
+                        maintenance: monthlyMaintenance,
+                        ewf: monthlyEwfCost,
+                        taxBenefit: monthlyTaxBenefit,
+                    }}
+                />
+            </div>
+            <div className="grid gap-6 md:grid-cols-3">
+                 <StatCard 
+                    title="Net Monthly Buy Cost"
+                    value={formatCurrency(totalNetMonthlyBuyingCost)}
+                    description="After tax benefit & EWF."
+                    icon={Home}
+                />
+                <StatCard 
+                    title="Net Monthly Rent Cost"
+                    value={formatCurrency(netMonthlyRentalCost)}
+                    description={results.huurtoeslagAmount > 0 ? `After ${formatCurrency(results.huurtoeslagAmount)} subsidy` : 'Your current situation.'}
+                    icon={Building}
+                />
+                <StatCard 
+                    title="Monthly Equity Gained"
+                    value={formatCurrency(monthlyEquityAccumulation)}
+                    description="Your direct investment into the home."
+                    icon={TrendingUp}
+                    colorClass="text-green-600"
+                />
+            </div>
+        </CardContent>
+      </Card>
+      
+      {/* 4. The Finish Line: Long-Term Outcome */}
+       <Card>
+        <CardHeader>
+            <div className="flex items-center gap-3">
+                <BarChart className="w-6 h-6 text-primary"/>
+                <CardTitle>The Finish Line: {stayDuration}-Year Financial Projection</CardTitle>
+            </div>
+          <CardDescription>Comparing total costs and wealth generation over your intended length of stay.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            <div className="min-h-[400px]">
+                <ProjectionChart data={projection} breakevenYear={breakevenPoint} />
+            </div>
+
+             <div className={breakevenPoint ? "bg-secondary/50 dark:bg-secondary/20 border-l-4 border-primary p-4 rounded-r-lg" : "bg-amber-100 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-r-lg"}>
+                <div className="flex items-start gap-3">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <HelpCircle className="w-5 h-5 text-muted-foreground mt-1" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                                <p>The "True Breakeven" is the year when the total cost of renting finally exceeds the total net cost of owning. The net cost of owning is your total cash payments (upfront costs + monthly costs) <span className="font-bold">minus</span> the cash you would get back if you sold the house (equity + appreciation - selling costs).</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <div>
+                        <h4 className="font-semibold">How to Read the "True Breakeven"</h4>
+                        <p className={`text-sm mt-1 mb-3 ${breakevenPoint ? "text-muted-foreground" : "text-amber-800 dark:text-amber-300"}`}>
+                            {breakevenPoint && breakevenData
+                                ? `Buying becomes cheaper than renting in Year ${breakevenPoint}. Here is the math for that year:`
+                                : `Buying does not financially break even with renting within your ${stayDuration}-year timeline.`}
+                        </p>
+                        {breakevenPoint && breakevenData && (
+                            <div className="text-xs space-y-2 text-muted-foreground">
+                            <div className="flex justify-between">
+                                <span>Total Rent Paid by Year {breakevenPoint}:</span>
+                                <span className="font-medium text-foreground">{formatCurrency(breakevenData.cumulativeRentingCost)}</span>
+                            </div>
+                            <div className="border-t pt-2 mt-2">
+                                <div className="flex justify-between">
+                                <span>Total Buying Costs Paid (cash):</span>
+                                <span className="font-medium text-foreground">{formatCurrency(breakevenData.cumulativeBuyingCost)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                <span>- Est. Value from Sale:</span>
+                                <span className="font-medium text-green-600">-{formatCurrency(breakevenData.propertyValue - breakevenData.totalNetOwnershipCost - totalUpfrontCosts)}</span>
+                                </div>
+                                <div className="border-t my-1"></div>
+                                <div className="flex justify-between font-bold">
+                                <span>= True Cost of Owning:</span>
+                                <span className="text-foreground">{formatCurrency(breakevenData.totalNetOwnershipCost)}</span>
+                                </div>
+                            </div>
+                            <p className="text-xs pt-2">
+                                At this point, the True Cost of Owning ({formatCurrency(breakevenData.totalNetOwnershipCost)}) becomes less than the Total Rent Paid ({formatCurrency(breakevenData.cumulativeRentingCost)}).
+                            </p>
+                            </div>
+                        )}
+                        {!breakevenPoint && (
+                            <p className="text-xs text-muted-foreground">
+                            Based on your projections, the high upfront costs of buying are not recovered through equity and appreciation within your planned stay, making renting the cheaper option over this period.
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
         </CardContent>
       </Card>
 
