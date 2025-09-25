@@ -123,12 +123,14 @@ export default function AnalysisTool() {
       isResettingRef.current = true;
       form.reset({}); 
       setResults(null);
-      setFormErrors(form.formState.errors);
+      setFormErrors({});
       toast({
         title: "Form Cleared",
         description: "Your inputs have been cleared.",
       });
-      // The ref will be reset by the useEffect watching isDirty state
+      setTimeout(() => {
+        isResettingRef.current = false;
+      }, 0);
     } catch (error) {
       console.error("Failed to clear localStorage", error);
       toast({
@@ -138,6 +140,7 @@ export default function AnalysisTool() {
       });
     }
   }, [form, toast]);
+
 
   if (!isClient) {
     return null;
