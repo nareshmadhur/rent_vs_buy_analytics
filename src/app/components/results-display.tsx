@@ -58,7 +58,7 @@ const QualitativeFactors = () => (
 )
 
 export default function ResultsDisplay({ results }: ResultsDisplayProps) {
-  if (!results || Object.values(results).some(v => v === null || v === undefined || (typeof v === 'number' && isNaN(v)))) {
+  if (!results) {
     return (
       <Card className="flex flex-col items-center justify-center h-full min-h-[500px] bg-secondary/50 border-dashed">
         <CardHeader className="text-center">
