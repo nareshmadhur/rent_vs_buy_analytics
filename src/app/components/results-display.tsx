@@ -5,10 +5,12 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import CostComparisonChart from './cost-comparison-chart';
 import { formatCurrency } from '@/lib/utils';
-import { Wallet, Home, Building, PiggyBank, BadgePercent, Landmark, Info, BarChart, Trophy, FileText } from 'lucide-react';
+import { Wallet, Home, Building, PiggyBank, BadgePercent, Landmark, Info, BarChart, Trophy, FileText, HelpCircle } from 'lucide-react';
 import type { CalculationOutput } from '@/lib/calculations';
 import { Skeleton } from '@/components/ui/skeleton';
 import ProjectionChart from './projection-chart';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 interface ResultsDisplayProps {
   results: CalculationOutput | null;
@@ -96,7 +98,7 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
   } = results;
 
   const stayDuration = projection.length > 0 ? projection[projection.length - 1].year : 0;
-  const doesBreakeven = breakevenPoint !== null;
+  const doesBreakeven = breakevenPoint !== null && breakevenPoint <= stayDuration;
 
   return (
     <div className="space-y-6">
@@ -121,16 +123,25 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card className={doesBreakeven ? "bg-green-100 dark:bg-green-900/20 border-green-500" : "bg-amber-100 dark:bg-amber-900/20 border-amber-500"}>
-            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-            <Trophy className={`w-8 h-8 ${doesBreakeven ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'}`} />
-            <div>
+            <CardHeader>
+              <div className="flex items-center justify-between">
                 <CardTitle>True Financial Breakeven</CardTitle>
-                <CardDescription className={doesBreakeven ? "text-green-800 dark:text-green-300" : "text-amber-800 dark:text-amber-300"}>
-                {doesBreakeven
-                    ? `Buying becomes cheaper than renting in Year ${breakevenPoint}.`
-                    : `Buying does not break even with renting within the ${stayDuration}-year timeline.`}
-                </CardDescription>
-            </div>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <HelpCircle className="w-5 h-5 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                            <p>The "True Breakeven" is the year when the total cost of renting finally exceeds the total net cost of owning. The net cost of owning is your total cash payments (upfront costs + monthly costs) <span className="font-bold">minus</span> the cash you would get back if you sold the house (equity + appreciation - selling costs).</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+              </div>
+              <p className={`text-sm ${doesBreakeven ? "text-green-800 dark:text-green-300" : "text-amber-800 dark:text-amber-300"}`}>
+                  {doesBreakeven
+                      ? `Based on your inputs, buying becomes cheaper than renting in Year ${breakevenPoint}.`
+                      : `Buying does not financially break even with renting within your ${stayDuration}-year timeline.`}
+              </p>
             </CardHeader>
         </Card>
          <Card>

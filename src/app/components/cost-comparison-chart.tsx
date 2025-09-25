@@ -1,7 +1,7 @@
 
 "use client"
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, LabelList } from "recharts"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 import { formatCurrency } from "@/lib/utils"
 
@@ -45,8 +45,6 @@ interface CostComparisonChartProps {
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      // The payload contains all items in the stack. We need to check if we are on the 'buy' stack.
-      // We can do this by checking if a key like 'principal' exists in the payload names.
       const payloadKeys = payload.map((p: any) => p.dataKey);
       const isBuyingStack = payloadKeys.some((key: string) => ['principal', 'interest', 'maintenance', 'ewf'].includes(key));
       
@@ -100,10 +98,12 @@ export default function CostComparisonChart({ rentingCost, buyingCostBreakdown }
       taxBenefit: buyingCostBreakdown.taxBenefit,
     },
   ]
+  
+  const buyingCostNet = buyingCostBreakdown.principal + buyingCostBreakdown.interest + buyingCostBreakdown.maintenance + buyingCostBreakdown.ewf - buyingCostBreakdown.taxBenefit;
 
   return (
-    <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-      <BarChart accessibilityLayer data={chartData} barSize={80} >
+    <ChartContainer config={chartConfig} className="min-h-[400px] w-full">
+      <BarChart accessibilityLayer data={chartData} barSize={120} margin={{ top: 40, right: 20, left: 20, bottom: 20 }} >
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="label"
@@ -116,6 +116,7 @@ export default function CostComparisonChart({ rentingCost, buyingCostBreakdown }
           tickLine={false}
           axisLine={false}
           tickMargin={10}
+          hide
         />
         <Tooltip
           cursor={{ fill: 'hsla(var(--muted-foreground), 0.1)' }}
@@ -123,16 +124,44 @@ export default function CostComparisonChart({ rentingCost, buyingCostBreakdown }
           allowEscapeViewBox={{ x: true, y: true }}
           wrapperStyle={{ zIndex: 100 }}
         />
-        <Legend />
         
         {/* Rent Bar */}
-        <Bar dataKey="rent" name="Net Rent" fill="var(--color-rent)" radius={4} stackId="rent" />
+        <Bar dataKey="rent" name="Net Rent" fill="var(--color-rent)" radius={4} stackId="rent">
+             <LabelList dataKey="rent" position="top" formatter={(value: number) => `Rent: ${formatCurrency(value)}`} />
+        </Bar>
 
         {/* Buying Bar - Stacked */}
-        <Bar dataKey="principal" name="Principal (Equity)" fill="var(--color-principal)" radius={[4, 4, 0, 0]} stackId="buy" />
-        <Bar dataKey="interest" name="Interest Cost" fill="var(--color-interest)" stackId="buy" />
-        <Bar dataKey="maintenance" name="Maintenance" fill="var(--color-maintenance)" stackId="buy" />
-        <Bar dataKey="ewf" name="EWF Tax" fill="var(--color-ewf)" radius={[0, 0, 0, 0]} stackId="buy" />
+        <Bar dataKey="principal" name="Principal (Equity)" fill="var(--color-principal)" radius={[4, 4, 0, 0]} stackId="buy">
+            <LabelList dataKey="principal" position="center" formatter={(value: number) => `Equity: ${formatCurrency(value)}`} />
+        </Bar>
+        <Bar dataKey="interest" name="Interest Cost" fill="var(--color-interest)" stackId="buy">
+             <LabelList dataKey="interest" position="center" formatter={(value: number) => `Interest: ${formatCurrency(value)}`} />
+        </Bar>
+        <Bar dataKey="maintenance" name="Maintenance" fill="var(--color-maintenance)" stackId="buy">
+             <LabelList dataKey="maintenance" position="center" formatter={(value: number) => `Maint: ${formatCurrency(value)}`} />
+        </Bar>
+        <Bar dataKey="ewf" name="EWF Tax" fill="var(--color-ewf)" radius={[0, 0, 0, 0]} stackId="buy">
+            <LabelList dataKey="ewf" position="center" formatter={(value: number) => `EWF Tax: ${formatCurrency(value)}`} />
+        </Bar>
+        
+        {/* Invisible bar for tax benefit label */}
+        <Bar dataKey="taxBenefit" hide stackId="buy" />
+        
+         <Bar dataKey="totalNet" stackId="buy" fill="transparent">
+            <LabelList 
+                valueAccessor={() => `Net Cost: ${formatCurrency(buyingCostNet)}`} 
+                position="top" 
+                offset={10}
+                className="font-bold fill-primary"
+            />
+             <LabelList 
+                valueAccessor={() => `(Tax credit: -${formatCurrency(buyingCostBreakdown.taxBenefit)})`} 
+                position="bottom" 
+                offset={8}
+                className="text-xs fill-green-600"
+            />
+        </Bar>
+
 
       </BarChart>
     </ChartContainer>
