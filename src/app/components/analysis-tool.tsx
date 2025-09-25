@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { AnalysisFormValues } from '@/lib/schema';
@@ -44,6 +44,7 @@ export default function AnalysisTool() {
   const [formErrors, setFormErrors] = useState<FieldErrors<AnalysisFormValues> | null>(null);
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
+  const isClearingRef = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -55,7 +56,7 @@ export default function AnalysisTool() {
     defaultValues: initialDefaultValues,
   });
   
-  const onSubmit = (data: AnalysisFormValues) => {
+  const onSubmit = useCallback((data: AnalysisFormValues) => {
     console.log('Form submitted with data:', data);
     try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
@@ -72,7 +73,7 @@ export default function AnalysisTool() {
             description: "An unexpected error occurred during calculation."
         });
     }
-  };
+  }, [toast]);
 
   const handleValidationErrors = (errors: FieldErrors<AnalysisFormValues>) => {
     setResults(null); // Clear previous results
@@ -104,12 +105,16 @@ export default function AnalysisTool() {
       }
     });
 
-  }, [form, isClient]); 
+  }, [form, isClient, onSubmit]); 
 
   useEffect(() => {
     if (!isClient) return;
 
     const subscription = form.watch((values, { name, type }) => {
+        if (isClearingRef.current) {
+            return;
+        }
+
         try {
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(values));
         } catch (error) {
@@ -130,17 +135,16 @@ export default function AnalysisTool() {
   }, [form, isClient, onSubmit]);
 
   const handleClearForm = useCallback(() => {
+    isClearingRef.current = true;
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
       form.reset(initialDefaultValues);
-      setResults(null); // Explicitly set results to null
-      setFormErrors(null); // Explicitly clear any validation errors
+      setResults(null);
+      setFormErrors(null);
       toast({
         title: "Form Cleared",
         description: "Your inputs have been reset.",
       });
-      // A slight delay to ensure the UI updates before any potential re-validation
-      setTimeout(() => handleValidationErrors(form.formState.errors), 50);
     } catch (error) {
       console.error("Failed to clear localStorage", error);
       toast({
@@ -148,6 +152,12 @@ export default function AnalysisTool() {
         title: "Could not clear data",
         description: "There was an issue clearing the form data."
       });
+    } finally {
+        // Use a timeout to reset the flag after the current render cycle,
+        // which includes the `watch` effect.
+        setTimeout(() => {
+            isClearingRef.current = false;
+        }, 0);
     }
   }, [form, toast]);
 
