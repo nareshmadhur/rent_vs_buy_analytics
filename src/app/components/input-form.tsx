@@ -1,7 +1,9 @@
+
 "use client";
 
 import React, { useEffect } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
+import { useWatch } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -42,6 +44,20 @@ export default function InputForm({ form, onValuesChange, onClear }: InputFormPr
     });
     return () => subscription.unsubscribe();
   }, [form, onValuesChange]);
+
+  const isFirstTimeBuyer = useWatch({
+    control: form.control,
+    name: 'isFirstTimeBuyer',
+  });
+
+  useEffect(() => {
+    if (isFirstTimeBuyer) {
+      form.setValue('propertyTransferTaxPercentage', 0, { shouldValidate: true });
+    } else {
+      // Reset to default or last known value if needed. Here we reset to 2.
+      form.setValue('propertyTransferTaxPercentage', 2, { shouldValidate: true });
+    }
+  }, [isFirstTimeBuyer, form]);
 
   const transform = {
     input: (value: any) => (value === 0 && form.getFieldState(value).isDirty ? 0 : value || ''),
@@ -189,7 +205,16 @@ export default function InputForm({ form, onValuesChange, onClear }: InputFormPr
                       <div className="relative">
                         <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <FormControl>
-                          <Input type="number" step="0.1" placeholder="e.g., 2" {...field} className="pr-8" onChange={e => field.onChange(transformFloat.output(e))} value={field.value ?? ''} />
+                          <Input
+                            type="number"
+                            step="0.1"
+                            placeholder="e.g., 2"
+                            {...field}
+                            className="pr-8"
+                            onChange={e => field.onChange(transformFloat.output(e))}
+                            value={field.value ?? ''}
+                            disabled={isFirstTimeBuyer}
+                          />
                         </FormControl>
                       </div>
                       <FormMessage />
@@ -260,3 +285,5 @@ export default function InputForm({ form, onValuesChange, onClear }: InputFormPr
     </Card>
   );
 }
+
+    
