@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useCallback, useEffect } from 'react';
@@ -15,19 +16,23 @@ import { useToast } from '@/hooks/use-toast';
 const LOCAL_STORAGE_KEY = 'mortgageAnalysisData';
 
 const initialDefaultValues: AnalysisFormValues = {
-  age: undefined,
-  annualIncome: undefined,
+  age: 30,
+  annualIncome: 60000,
   employmentStatus: 'employed',
-  savings: 0,
-  currentRentalExpenses: undefined,
-  maxMortgage: undefined,
-  interestRate: undefined,
+  savings: 25000,
+  currentRentalExpenses: 1500,
+  maxMortgage: 300000,
+  interestRate: 4.1,
   propertyTransferTaxPercentage: 2,
   otherUpfrontCostsPercentage: 3,
   maintenancePercentage: 1,
   isFirstTimeBuyer: false,
   marginalTaxRate: 37,
   midEligible: true,
+  intendedLengthOfStay: 10,
+  propertyAppreciationRate: 2,
+  isEligibleForHuurtoeslag: false,
+  householdSize: 'single',
 };
 
 
@@ -63,6 +68,11 @@ export default function AnalysisTool() {
       console.error("Failed to read from localStorage", error);
     }
     form.reset(initialData);
+
+     // Trigger initial calculation
+    const calculatedResults = performCalculations(form.getValues());
+    setResults(calculatedResults);
+
   }, [form, isClient]); 
 
   const handleClearForm = useCallback(() => {

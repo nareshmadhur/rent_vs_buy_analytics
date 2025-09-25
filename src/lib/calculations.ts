@@ -2,6 +2,14 @@ import type { AnalysisFormValues } from './schema';
 
 export type CalculationInput = AnalysisFormValues;
 
+export type YearlyProjection = {
+    year: number;
+    cumulativeBuyingCost: number;
+    cumulativeRentingCost: number;
+    accumulatedEquity: number;
+    propertyValue: number;
+};
+
 export type CalculationOutput = {
     // Gross calculations
     grossMonthlyMortgage: number;
@@ -21,13 +29,39 @@ export type CalculationOutput = {
     // Comparison
     monthlyCostDifferential: number;
     currentRentalExpenses: number;
+    netMonthlyRentalCost: number;
+    huurtoeslagAmount: number;
 
     // Equity
     monthlyEquityAccumulation: number;
+
+    // Stage 3: Long-term projection
+    projection: YearlyProjection[];
+    breakevenPoint: number | null;
 };
 
 // Statutory rates
 const EWF_RATE = 0.0035; // 0.35%
+
+// Simplified Huurtoeslag (Rent Allowance) Calculation
+// These are illustrative values and do not reflect official 2024 limits.
+function calculateHuurtoeslag(income: number, rent: number, household: 'single' | 'couple'): number {
+    const incomeLimit = household === 'single' ? 30000 : 38000;
+    const rentLimit = 808; // Example limit
+
+    if (income > incomeLimit || rent > rentLimit) {
+        return 0;
+    }
+
+    // Simplified formula: subsidy decreases as income approaches the limit.
+    const incomeRatio = 1 - (income / incomeLimit);
+    const potentialSubsidy = (rent - 250) * 0.75; // Assume a base contribution
+    
+    const calculatedSubsidy = Math.max(0, potentialSubsidy * incomeRatio);
+    
+    return Math.min(calculatedSubsidy, 350); // Cap the subsidy
+}
+
 
 export function performCalculations(data: CalculationInput): CalculationOutput {
     // P1.0: Gross Monthly Mortgage (P&I) and Interest/Principal split
@@ -75,8 +109,56 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
     // P6.0: Monthly Equity Accumulation
     const monthlyEquityAccumulation = monthlyPrincipal;
 
+    // C1.0 & C2.0: Huurtoeslag & Net Rental Cost
+    const huurtoeslagAmount = data.isEligibleForHuurtoeslag
+      ? calculateHuurtoeslag(data.annualIncome || 0, data.currentRentalExpenses || 0, data.householdSize)
+      : 0;
+    const netMonthlyRentalCost = data.currentRentalExpenses - huurtoeslagAmount;
+
     // Comparison Calculation (using Net cost)
     const monthlyCostDifferential = totalNetMonthlyBuyingCost - data.currentRentalExpenses;
+
+
+    // C3.0 - C6.0: Long-Term Projection
+    const projection: YearlyProjection[] = [];
+    let cumulativeBuyingCost = totalUpfrontCosts;
+    let cumulativeRentingCost = 0;
+    let accumulatedEquity = 0;
+    let breakevenPoint: number | null = null;
+    let remainingMortgage = M;
+    let currentPropertyValue = P;
+
+    const annualNetBuyingCost = totalNetMonthlyBuyingCost * 12;
+    const annualNetRentingCost = netMonthlyRentalCost * 12;
+
+    for (let year = 1; year <= data.intendedLengthOfStay; year++) {
+        // C4.0: Cumulative Cost Tracking
+        cumulativeBuyingCost += annualNetBuyingCost;
+        cumulativeRentingCost += annualNetRentingCost;
+
+        // C5.0: Equity Calculation with Appreciation
+        // This is a simplified calculation. A real one would track interest/principal per year.
+        const annualPrincipalPaid = monthlyPrincipal * 12; // Simplified
+        remainingMortgage -= annualPrincipalPaid;
+        
+        currentPropertyValue *= (1 + data.propertyAppreciationRate / 100);
+
+        accumulatedEquity = currentPropertyValue - remainingMortgage;
+        
+        projection.push({
+            year,
+            cumulativeBuyingCost,
+            cumulativeRentingCost,
+            accumulatedEquity: Math.max(0, accumulatedEquity), // Equity can't be negative
+            propertyValue: currentPropertyValue
+        });
+
+        // C6.0: Breakeven Point Determination
+        if (breakevenPoint === null && cumulativeBuyingCost < cumulativeRentingCost) {
+            breakevenPoint = year;
+        }
+    }
+
 
     return {
         grossMonthlyMortgage,
@@ -90,6 +172,10 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
         totalNetMonthlyBuyingCost,
         monthlyCostDifferential,
         currentRentalExpenses: data.currentRentalExpenses,
-        monthlyEquityAccumulation
+        monthlyEquityAccumulation,
+        netMonthlyRentalCost,
+        huurtoeslagAmount,
+        projection,
+        breakevenPoint,
     };
 }

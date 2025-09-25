@@ -15,6 +15,12 @@ export const analysisSchema = z.object({
   isFirstTimeBuyer: z.boolean().default(false),
   marginalTaxRate: z.coerce.number().min(0).max(100).default(37),
   midEligible: z.boolean().default(true),
+
+  // Stage 3 inputs
+  intendedLengthOfStay: z.coerce.number().int().min(1, 'Must be at least 1 year.').max(30, 'Cannot exceed 30 years.').default(10),
+  propertyAppreciationRate: z.coerce.number().min(-5).max(20).default(2),
+  isEligibleForHuurtoeslag: z.boolean().default(false),
+  householdSize: z.enum(['single', 'couple']).default('single'),
 });
 
 export type AnalysisFormValues = z.infer<typeof analysisSchema>;

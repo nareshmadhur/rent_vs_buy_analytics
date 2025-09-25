@@ -1,12 +1,14 @@
+
 "use client";
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import CostComparisonChart from './cost-comparison-chart';
 import { formatCurrency } from '@/lib/utils';
-import { TrendingUp, TrendingDown, Wallet, Home, Building, PiggyBank, BadgePercent, Landmark, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Home, Building, PiggyBank, BadgePercent, Landmark, Info, BarChart, Trophy, FileText } from 'lucide-react';
 import type { CalculationOutput } from '@/lib/calculations';
 import { Skeleton } from '@/components/ui/skeleton';
+import ProjectionChart from './projection-chart';
 
 interface ResultsDisplayProps {
   results: CalculationOutput | null;
@@ -25,8 +27,38 @@ const ScoreCard = ({ title, value, description, icon: Icon, colorClass = 'text-p
   </Card>
 );
 
+const QualitativeFactors = () => (
+    <Card>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Beyond the Numbers
+            </CardTitle>
+            <CardDescription>The final decision isn't just financial. Here are some qualitative factors to consider.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+            <div>
+                <h4 className="font-semibold">Flexibility (Advantage: Renting)</h4>
+                <p className="text-muted-foreground">Renting offers the ability to move easily with short notice, ideal if your career or life plans are uncertain.</p>
+            </div>
+            <div>
+                <h4 className="font-semibold">Stability & Personalization (Advantage: Buying)</h4>
+                <p className="text-muted-foreground">Owning a home provides stability, protection from rent hikes, and the freedom to renovate and make it truly yours.</p>
+            </div>
+             <div>
+                <h4 className="font-semibold">Maintenance & Hassle (Advantage: Renting)</h4>
+                <p className="text-muted-foreground">Renters can call the landlord for repairs. Homeowners are responsible for all maintenance, which costs time and money.</p>
+            </div>
+             <div>
+                <h4 className="font-semibold">Emotional Value (Advantage: Buying)</h4>
+                <p className="text-muted-foreground">For many, owning a home provides a deep sense of security, community, and personal accomplishment that can't be quantified.</p>
+            </div>
+        </CardContent>
+    </Card>
+)
+
 export default function ResultsDisplay({ results }: ResultsDisplayProps) {
-  if (!results || Object.values(results).some(v => v === undefined || v === null || isNaN(v))) {
+  if (!results || Object.values(results).some(v => v === null || v === undefined || (typeof v === 'number' && isNaN(v)))) {
     return (
       <Card className="flex flex-col items-center justify-center h-full min-h-[500px] bg-secondary/50 border-dashed">
         <CardHeader className="text-center">
@@ -54,37 +86,98 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
     monthlyCostDifferential,
     monthlyEquityAccumulation,
     monthlyTaxBenefit,
-    monthlyEwfCost
+    monthlyEwfCost,
+    netMonthlyRentalCost,
+    huurtoeslagAmount,
+    projection,
+    breakevenPoint,
   } = results;
 
   const isBuyingCheaper = monthlyCostDifferential < 0;
+  const finalEquity = projection.length > 0 ? projection[projection.length - 1].accumulatedEquity : 0;
+  const stayDuration = projection.length > 0 ? projection[projection.length - 1].year : 0;
 
   return (
     <div className="space-y-6">
-      <Card>
+       <Card>
+        <CardHeader>
+          <CardTitle>Net Monthly Cost Comparison</CardTitle>
+          <CardDescription>Visualizing your initial monthly housing expenses after tax and subsidy adjustments.</CardDescription>
+        </CardHeader>
+        <CardContent className="pl-2">
+          <CostComparisonChart
+            rentingCost={netMonthlyRentalCost}
+            buyingCost={totalNetMonthlyBuyingCost}
+          />
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className={breakevenPoint ? "bg-green-100 dark:bg-green-900/20 border-green-500" : "bg-amber-100 dark:bg-amber-900/20 border-amber-500"}>
+            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+            <Trophy className={`w-8 h-8 ${breakevenPoint ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'}`} />
+            <div>
+                <CardTitle>Financial Breakeven Point</CardTitle>
+                <CardDescription className={breakevenPoint ? "text-green-800 dark:text-green-300" : "text-amber-800 dark:text-amber-300"}>
+                {breakevenPoint
+                    ? `Buying becomes cheaper than renting in Year ${breakevenPoint}.`
+                    : `Buying does not break even with renting within your ${stayDuration}-year timeline.`}
+                </CardDescription>
+            </div>
+            </CardHeader>
+        </Card>
+         <Card>
+            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+            <PiggyBank className="w-8 h-8 text-primary" />
+            <div>
+                <CardTitle>Projected Equity</CardTitle>
+                <CardDescription>
+                    After {stayDuration} years, you could accumulate
+                    <span className="font-bold text-foreground"> {formatCurrency(finalEquity)} </span>
+                    in home equity.
+                </CardDescription>
+            </div>
+            </CardHeader>
+        </Card>
+      </div>
+
+       <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart className="w-5 h-5" />
+            10-Year Financial Projection
+          </CardTitle>
+          <CardDescription>Comparing the total cumulative costs and equity growth over time.</CardDescription>
+        </CardHeader>
+        <CardContent className="pl-2">
+          <ProjectionChart data={projection} />
+        </CardContent>
+      </Card>
+
+       <Card>
         <CardHeader>
           <CardTitle>Net Results Scorecard</CardTitle>
-          <CardDescription>An overview of your rent vs. buy comparison with tax effects.</CardDescription>
+          <CardDescription>A detailed breakdown of your rent vs. buy comparison with tax and subsidy effects.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <ScoreCard
             title="Net Monthly Buy Cost"
             value={formatCurrency(totalNetMonthlyBuyingCost)}
-            description="After tax benefit & cost."
+            description="After tax benefit & EWF."
             icon={Home}
+          />
+           <ScoreCard
+            title="Net Monthly Rent Cost"
+            value={formatCurrency(netMonthlyRentalCost)}
+            description={huurtoeslagAmount > 0 ? `After ${formatCurrency(huurtoeslagAmount)} subsidy` : 'Your current situation.'}
+            icon={Building}
           />
           <ScoreCard
             title="Monthly Equity"
             value={formatCurrency(monthlyEquityAccumulation)}
-            description="Investment in your home."
+            description="Initial investment in your home."
             icon={PiggyBank}
             colorClass="text-green-600"
-          />
-           <ScoreCard
-            title="Monthly Rent Cost"
-            value={formatCurrency(currentRentalExpenses)}
-            description="Your current situation."
-            icon={Building}
           />
           <ScoreCard
             title="Upfront Buying Costs"
@@ -110,32 +203,7 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Net Monthly Cost Comparison</CardTitle>
-          <CardDescription>Visualizing your monthly housing expenses after tax adjustments.</CardDescription>
-        </CardHeader>
-        <CardContent className="pl-2">
-          <CostComparisonChart
-            rentingCost={currentRentalExpenses}
-            buyingCost={totalNetMonthlyBuyingCost}
-          />
-        </CardContent>
-      </Card>
-
-      <Card className={isBuyingCheaper ? "bg-green-100 dark:bg-green-900/20 border-green-500" : "bg-red-100 dark:bg-red-900/20 border-red-500"}>
-        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-          {isBuyingCheaper ? <TrendingDown className="w-8 h-8 text-green-700 dark:text-green-400" /> : <TrendingUp className="w-8 h-8 text-red-700 dark:text-red-400" />}
-          <div>
-            <CardTitle>Net Monthly Differential</CardTitle>
-            <CardDescription className={isBuyingCheaper ? "text-green-800 dark:text-green-300" : "text-red-800 dark:text-red-300"}>
-              {isBuyingCheaper
-                ? `Buying is ${formatCurrency(Math.abs(monthlyCostDifferential))} cheaper per month on a net basis.`
-                : `Buying is ${formatCurrency(monthlyCostDifferential)} more expensive per month on a net basis.`}
-            </CardDescription>
-          </div>
-        </CardHeader>
-      </Card>
+      <QualitativeFactors />
     </div>
   );
 }
