@@ -86,6 +86,23 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
+// Custom label to prevent overlapping
+const ConditionalLabel = (props: any) => {
+    const { x, y, width, height, value, prefix } = props;
+    const label = `${prefix}: ${formatCurrency(value)}`;
+
+    // Only render label if the bar segment is tall enough
+    if (height < 20) {
+        return null;
+    }
+
+    return (
+        <text x={x + width / 2} y={y + height / 2} fill="#fff" textAnchor="middle" dominantBaseline="middle" className="text-xs font-medium">
+            {label}
+        </text>
+    );
+};
+
 export default function CostComparisonChart({ rentingCost, buyingCostBreakdown }: CostComparisonChartProps) {
   const chartData = [
     {
@@ -132,16 +149,16 @@ export default function CostComparisonChart({ rentingCost, buyingCostBreakdown }
 
         {/* Buying Bar - Stacked */}
         <Bar dataKey="principal" name="Principal (Equity)" fill="var(--color-principal)" radius={[4, 4, 0, 0]} stackId="buy">
-            <LabelList dataKey="principal" position="center" formatter={(value: number) => `Equity: ${formatCurrency(value)}`} />
+            <LabelList content={<ConditionalLabel prefix="Equity" />} />
         </Bar>
         <Bar dataKey="interest" name="Interest Cost" fill="var(--color-interest)" stackId="buy">
-             <LabelList dataKey="interest" position="center" formatter={(value: number) => `Interest: ${formatCurrency(value)}`} />
+             <LabelList content={<ConditionalLabel prefix="Interest" />} />
         </Bar>
         <Bar dataKey="maintenance" name="Maintenance" fill="var(--color-maintenance)" stackId="buy">
-             <LabelList dataKey="maintenance" position="center" formatter={(value: number) => `Maint: ${formatCurrency(value)}`} />
+             <LabelList content={<ConditionalLabel prefix="Maint" />} />
         </Bar>
         <Bar dataKey="ewf" name="EWF Tax" fill="var(--color-ewf)" radius={[0, 0, 0, 0]} stackId="buy">
-            <LabelList dataKey="ewf" position="center" formatter={(value: number) => `EWF Tax: ${formatCurrency(value)}`} />
+            <LabelList content={<ConditionalLabel prefix="EWF Tax" />} />
         </Bar>
         
         {/* Invisible bar for tax benefit label */}
