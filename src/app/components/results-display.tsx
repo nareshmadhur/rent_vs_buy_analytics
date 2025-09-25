@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import CostComparisonChart from './cost-comparison-chart';
 import { formatCurrency } from '@/lib/utils';
-import { TrendingUp, TrendingDown, Wallet, Home, Building } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Home, Building, PiggyBank, BadgePercent, Landmark } from 'lucide-react';
 import type { CalculationOutput } from '@/lib/calculations';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -46,7 +46,15 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
     );
   }
 
-  const { totalUpfrontCosts, totalGrossMonthlyBuyingCost, currentRentalExpenses, monthlyCostDifferential } = results;
+  const {
+    totalUpfrontCosts,
+    totalNetMonthlyBuyingCost,
+    currentRentalExpenses,
+    monthlyCostDifferential,
+    monthlyEquityAccumulation,
+    monthlyTaxBenefit,
+    monthlyEwfCost
+  } = results;
 
   const isBuyingCheaper = monthlyCostDifferential < 0;
 
@@ -54,41 +62,62 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Results Scorecard</CardTitle>
-          <CardDescription>An overview of your rent vs. buy comparison.</CardDescription>
+          <CardTitle>Net Results Scorecard</CardTitle>
+          <CardDescription>An overview of your rent vs. buy comparison with tax effects.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3">
+        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <ScoreCard
-            title="Upfront Buying Costs"
-            value={formatCurrency(totalUpfrontCosts)}
-            description="One-time expenses."
-            icon={Wallet}
-            colorClass="text-accent-foreground"
+            title="Net Monthly Buy Cost"
+            value={formatCurrency(totalNetMonthlyBuyingCost)}
+            description="After tax benefit & cost."
+            icon={Home}
           />
           <ScoreCard
-            title="Gross Monthly Rent"
+            title="Monthly Equity"
+            value={formatCurrency(monthlyEquityAccumulation)}
+            description="Investment in your home."
+            icon={PiggyBank}
+            colorClass="text-green-600"
+          />
+           <ScoreCard
+            title="Monthly Rent Cost"
             value={formatCurrency(currentRentalExpenses)}
             description="Your current situation."
             icon={Building}
           />
           <ScoreCard
-            title="Gross Monthly Buy"
-            value={formatCurrency(totalGrossMonthlyBuyingCost)}
-            description="Mortgage + maintenance."
-            icon={Home}
+            title="Upfront Buying Costs"
+            value={formatCurrency(totalUpfrontCosts)}
+            description="One-time expenses (net)."
+            icon={Wallet}
+            colorClass="text-amber-600"
+          />
+          <ScoreCard
+            title="Monthly Tax Benefit"
+            value={formatCurrency(monthlyTaxBenefit)}
+            description="From interest deduction."
+            icon={BadgePercent}
+            colorClass="text-green-600"
+          />
+          <ScoreCard
+            title="Monthly EWF Tax"
+            value={formatCurrency(monthlyEwfCost)}
+            description="Notional rental income tax."
+            icon={Landmark}
+            colorClass="text-red-600"
           />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Cost Comparison</CardTitle>
-          <CardDescription>Visualizing your monthly housing expenses.</CardDescription>
+          <CardTitle>Net Monthly Cost Comparison</CardTitle>
+          <CardDescription>Visualizing your monthly housing expenses after tax adjustments.</CardDescription>
         </CardHeader>
         <CardContent className="pl-2">
           <CostComparisonChart
             rentingCost={currentRentalExpenses}
-            buyingCost={totalGrossMonthlyBuyingCost}
+            buyingCost={totalNetMonthlyBuyingCost}
           />
         </CardContent>
       </Card>
@@ -97,11 +126,11 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
         <CardHeader className="flex flex-row items-center gap-4 space-y-0">
           {isBuyingCheaper ? <TrendingDown className="w-8 h-8 text-green-700 dark:text-green-400" /> : <TrendingUp className="w-8 h-8 text-red-700 dark:text-red-400" />}
           <div>
-            <CardTitle>Monthly Differential</CardTitle>
+            <CardTitle>Net Monthly Differential</CardTitle>
             <CardDescription className={isBuyingCheaper ? "text-green-800 dark:text-green-300" : "text-red-800 dark:text-red-300"}>
               {isBuyingCheaper
-                ? `Buying is ${formatCurrency(Math.abs(monthlyCostDifferential))} cheaper per month.`
-                : `Buying is ${formatCurrency(monthlyCostDifferential)} more expensive per month.`}
+                ? `Buying is ${formatCurrency(Math.abs(monthlyCostDifferential))} cheaper per month on a net basis.`
+                : `Buying is ${formatCurrency(monthlyCostDifferential)} more expensive per month on a net basis.`}
             </CardDescription>
           </div>
         </CardHeader>

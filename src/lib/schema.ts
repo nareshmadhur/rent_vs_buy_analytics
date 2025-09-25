@@ -10,6 +10,10 @@ export const analysisSchema = z.object({
   interestRate: z.coerce.number().positive({ message: "Rate must be a positive number." }).max(20, { message: "Rate seems too high." }),
   upfrontCostPercentage: z.coerce.number().positive({ message: "Percentage must be positive." }).max(20, { message: "Percentage seems too high." }).default(5),
   maintenancePercentage: z.coerce.number().positive({ message: "Percentage must be positive." }).max(10, { message: "Percentage seems too high." }).default(1),
+  // Stage 2 fields
+  isFirstTimeBuyer: z.boolean().default(false),
+  marginalTaxRate: z.coerce.number().min(0).max(100).default(37),
+  midEligible: z.boolean().default(true),
 });
 
 export type AnalysisFormValues = z.infer<typeof analysisSchema>;

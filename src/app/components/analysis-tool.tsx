@@ -29,6 +29,9 @@ export default function AnalysisTool() {
       interestRate: undefined,
       upfrontCostPercentage: 5,
       maintenancePercentage: 1,
+      isFirstTimeBuyer: false,
+      marginalTaxRate: 37,
+      midEligible: true,
     },
   });
 
@@ -53,7 +56,7 @@ export default function AnalysisTool() {
     <div className="flex flex-col min-h-screen">
       <header className="p-6 border-b">
         <h1 className="text-3xl font-bold text-primary font-headline">Hypotheek Analyse</h1>
-        <p className="text-muted-foreground">A simple tool to compare the gross monthly costs of renting versus buying.</p>
+        <p className="text-muted-foreground">Analyse the net monthly costs of buying vs. renting and see your equity grow.</p>
       </header>
       <div className="flex-grow container mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
@@ -70,9 +73,9 @@ export default function AnalysisTool() {
           <CardContent className="p-4 flex items-center gap-4">
             <AlertTriangle className="w-8 h-8 text-accent-foreground" />
             <div>
-              <h3 className="font-bold text-accent-foreground">Disclaimer: Gross Calculation Only</h3>
+              <h3 className="font-bold text-accent-foreground">Disclaimer: Estimation Only</h3>
               <p className="text-sm text-muted-foreground">
-                These results are based on gross calculations and do not include potential tax benefits like mortgage interest deduction (hypotheekrenteaftrek). This is a Stage 1 analysis for basic comparison.
+                These results are estimations based on the data provided and common tax rules. This is an analysis for comparison, not financial advice. Consult with a certified financial advisor.
               </p>
             </div>
           </CardContent>

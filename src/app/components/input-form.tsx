@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info, Euro } from 'lucide-react';
+import { Info, Euro, Percent } from 'lucide-react';
 import type { AnalysisFormValues } from '@/lib/schema';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface InputFormProps {
   form: UseFormReturn<AnalysisFormValues>;
@@ -32,8 +34,6 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
 );
 
 export default function InputForm({ form, onValuesChange }: InputFormProps) {
-  const watchedValues = form.watch();
-
   useEffect(() => {
     const subscription = form.watch((value) => {
       onValuesChange(value as AnalysisFormValues);
@@ -42,18 +42,18 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
   }, [form, onValuesChange]);
 
   const transform = {
-    input: (value: any) => (isNaN(value) ? '' : value),
+    input: (value: any) => (value === 0 && form.getFieldState(value).isDirty ? 0 : value || ''),
     output: (e: React.ChangeEvent<HTMLInputElement>) => {
       const output = parseInt(e.target.value, 10);
-      return isNaN(output) ? 0 : output;
+      return isNaN(output) ? undefined : output;
     },
   };
 
   const transformFloat = {
-    input: (value: any) => (isNaN(value) ? '' : value),
+    input: (value: any) => (value === 0 && form.getFieldState(value).isDirty ? 0 : value || ''),
     output: (e: React.ChangeEvent<HTMLInputElement>) => {
       const output = parseFloat(e.target.value);
-      return isNaN(output) ? 0 : output;
+      return isNaN(output) ? undefined : output;
     },
   };
 
@@ -67,13 +67,13 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
         <Form {...form}>
           <form className="space-y-6">
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-primary">Personal Details</h3>
+              <h3 className="text-lg font-medium text-primary">Personal & Financials</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField control={form.control} name="age" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Age</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g., 30" {...field} onChange={e => field.onChange(transform.output(e))} value={transform.input(field.value)} />
+                      <Input type="number" placeholder="e.g., 30" {...field} onChange={e => field.onChange(transform.output(e))} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -94,19 +94,13 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                     <FormMessage />
                   </FormItem>
                 )} />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-primary">Financials</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <FormField control={form.control} name="annualIncome" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Annual Income (Gross)</FormLabel>
                     <div className="relative">
                       <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 60000" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={transform.input(field.value)} />
+                        <Input type="number" placeholder="e.g., 60000" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={field.value ?? ''} />
                       </FormControl>
                     </div>
                     <FormMessage />
@@ -118,19 +112,25 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                     <div className="relative">
                       <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 25000" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={transform.input(field.value)} />
+                        <Input type="number" placeholder="e.g., 25000" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={field.value ?? ''} />
                       </FormControl>
                     </div>
                     <FormMessage />
                   </FormItem>
                 )} />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-primary">Housing & Mortgage</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField control={form.control} name="currentRentalExpenses" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Current Monthly Rent</FormLabel>
                     <div className="relative">
                       <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 1500" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={transform.input(field.value)} />
+                        <Input type="number" placeholder="e.g., 1500" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={field.value ?? ''} />
                       </FormControl>
                     </div>
                     <FormMessage />
@@ -142,7 +142,7 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                     <div className="relative">
                       <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 300000" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={transform.input(field.value)} />
+                        <Input type="number" placeholder="e.g., 300000" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={field.value ?? ''} />
                       </FormControl>
                     </div>
                     <FormMessage />
@@ -150,38 +150,81 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                 )} />
               </div>
             </div>
-
+            
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-primary">Assumptions</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <FormField control={form.control} name="interestRate" render={({ field }) => (
+              <h3 className="text-lg font-medium text-primary">Taxes & Assumptions</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <FormField control={form.control} name="interestRate" render={({ field }) => (
                   <FormItem>
                     <LabelWithTooltip label="Interest Rate (%)" tooltip="The annual mortgage interest rate. Check with your advisor for a current estimate." />
-                    <FormControl>
-                      <Input type="number" step="0.01" placeholder="e.g., 4.1" {...field} onChange={e => field.onChange(transformFloat.output(e))} value={transformFloat.input(field.value)} />
-                    </FormControl>
+                    <div className="relative">
+                      <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="e.g., 4.1" {...field} className="pr-8" onChange={e => field.onChange(transformFloat.output(e))} value={field.value ?? ''} />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="marginalTaxRate" render={({ field }) => (
+                  <FormItem>
+                    <LabelWithTooltip label="Marginal Tax Rate (%)" tooltip="Your highest tax bracket percentage. For 2024, this is ~37% for income up to ~€75k, and ~49.5% above that." />
+                    <div className="relative">
+                      <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input type="number" step="0.1" placeholder="e.g., 37" {...field} className="pr-8" onChange={e => field.onChange(transformFloat.output(e))} value={field.value ?? ''} />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="upfrontCostPercentage" render={({ field }) => (
                   <FormItem>
-                    <LabelWithTooltip label="Upfront Costs (%)" tooltip="One-time buying costs (kosten koper) as a percentage of the purchase price. Includes transfer tax, notary fees, etc. Typically 4-6%." />
-                    <FormControl>
-                      <Input type="number" step="0.1" placeholder="e.g., 5" {...field} onChange={e => field.onChange(transformFloat.output(e))} value={transformFloat.input(field.value)} />
-                    </FormControl>
+                    <LabelWithTooltip label="Upfront Costs (%)" tooltip="One-time buying costs (kosten koper) as a percentage of the purchase price. Includes transfer tax (2%), notary, etc. Typically 4-6%. Transfer tax may be waived for first-time buyers." />
+                    <div className="relative">
+                      <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input type="number" step="0.1" placeholder="e.g., 5" {...field} className="pr-8" onChange={e => field.onChange(transformFloat.output(e))} value={field.value ?? ''} />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="maintenancePercentage" render={({ field }) => (
                   <FormItem>
                     <LabelWithTooltip label="Maintenance (%)" tooltip="Annual maintenance costs as a percentage of the purchase price. A common estimate is 1%." />
-                    <FormControl>
-                      <Input type="number" step="0.1" placeholder="e.g., 1" {...field} onChange={e => field.onChange(transformFloat.output(e))} value={transformFloat.input(field.value)} />
-                    </FormControl>
+                     <div className="relative">
+                      <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input type="number" step="0.1" placeholder="e.g., 1" {...field} className="pr-8" onChange={e => field.onChange(transformFloat.output(e))} value={field.value ?? ''} />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )} />
               </div>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6 pt-2">
+                  <FormField control={form.control} name="isFirstTimeBuyer" render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <LabelWithTooltip label="First-Time Buyer?" tooltip="Check this if you are buying your first home. If you are under 35, you may be exempt from the 2% transfer tax." />
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="midEligible" render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <LabelWithTooltip label="MID Eligible?" tooltip="Is your mortgage (to be) taken out after 2013 and repaid via annuity or linear scheme within 30 years? If so, you are likely eligible for Mortgage Interest Deduction (Hypotheekrenteaftrek)." />
+                      </div>
+                       <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )} />
+                </div>
             </div>
           </form>
         </Form>
