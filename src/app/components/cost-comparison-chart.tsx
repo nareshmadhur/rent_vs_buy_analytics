@@ -45,11 +45,13 @@ interface CostComparisonChartProps {
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      // The payload contains all items in the stack. We need to check if we are on the 'buy' stack.
+      // We can do this by checking if a key like 'principal' exists in the payload names.
+      const payloadKeys = payload.map((p: any) => p.dataKey);
+      const isBuyingStack = payloadKeys.some((key: string) => ['principal', 'interest', 'maintenance', 'ewf'].includes(key));
+      
       const data = payload[0].payload;
-      const hoveredDataKey = payload[0].dataKey;
-      
-      const isBuyingStack = ['principal', 'interest', 'maintenance', 'ewf'].includes(hoveredDataKey);
-      
+
       if (isBuyingStack) {
         const totalBuyingGross = data.principal + data.interest + data.maintenance + data.ewf;
         const taxBenefit = data.taxBenefit;
