@@ -32,43 +32,35 @@ const initialDefaultValues: AnalysisFormValues = {
 
 export default function AnalysisTool() {
   const [results, setResults] = useState<CalculationOutput | null>(null);
-  const [defaultValues, setDefaultValues] = useState<AnalysisFormValues>(initialDefaultValues);
   const { toast } = useToast();
 
-   useEffect(() => {
+  const form = useForm<AnalysisFormValues>({
+    resolver: zodResolver(analysisSchema),
+    mode: 'onChange',
+  });
+
+  useEffect(() => {
+    let initialData = initialDefaultValues;
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        // Validate parsed data against schema to avoid loading malformed data
+        // Validate saved data before merging
         const validation = analysisSchema.partial().safeParse(parsedData);
         if (validation.success) {
-            const mergedValues = { ...initialDefaultValues, ...validation.data };
-            setDefaultValues(mergedValues);
-            // Pre-calculate results if the stored form is valid
-             analysisSchema.safeParseAsync(mergedValues).then(validationResult => {
-                if (validationResult.success) {
-                    setResults(performCalculations(validationResult.data));
-                }
-            });
+          initialData = { ...initialDefaultValues, ...validation.data };
         }
       }
     } catch (error) {
       console.error("Failed to read from localStorage", error);
     }
-  }, []);
+    form.reset(initialData);
+  }, [form]); // Only run once on mount
 
-  const form = useForm<AnalysisFormValues>({
-    resolver: zodResolver(analysisSchema),
-    mode: 'onChange',
-    values: defaultValues, // Use 'values' to make it controlled by the state that loads from localStorage
-  });
-
-   const handleClearForm = useCallback(() => {
+  const handleClearForm = useCallback(() => {
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
       form.reset(initialDefaultValues);
-      setDefaultValues(initialDefaultValues);
       setResults(null);
       toast({
         title: "Form Cleared",
@@ -76,21 +68,24 @@ export default function AnalysisTool() {
       });
     } catch (error) {
       console.error("Failed to clear localStorage", error);
+      toast({
+        variant: "destructive",
+        title: "Could not clear data",
+        description: "There was an issue clearing the form data."
+      });
     }
   }, [form, toast]);
 
-
-  const handleFormChange = useCallback((data: AnalysisFormValues) => {
-    setDefaultValues(data); // Keep the local state in sync
+  const handleValuesChange = (data: AnalysisFormValues) => {
     try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
     } catch (error) {
-        console.error("Failed to save to localStorage", error);
-        toast({
-            variant: "destructive",
-            title: "Could not save data",
-            description: "Your changes will not be saved for the next session."
-        });
+      console.error("Failed to save to localStorage", error);
+      toast({
+        variant: "destructive",
+        title: "Could not save data",
+        description: "Your changes will not be saved for the next session."
+      });
     }
 
     analysisSchema.safeParseAsync(data)
@@ -105,17 +100,7 @@ export default function AnalysisTool() {
       .catch(() => {
         setResults(null);
       });
-  }, [toast]);
-
-  // We memoize the form instance, but since `values` prop is now used, 
-  // we might not need to memoize it if it causes issues with re-renders.
-  // Let's stick with it for now.
-  const memoizedForm = useMemo(() => form, [form]);
-
-  // Update form values if defaultValues change (e.g., on clear)
-  useEffect(() => {
-      form.reset(defaultValues);
-  }, [defaultValues, form]);
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -126,7 +111,7 @@ export default function AnalysisTool() {
       <div className="flex-grow container mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
-            <InputForm form={memoizedForm} onValuesChange={handleFormChange} onClear={handleClearForm} />
+            <InputForm form={form} onValuesChange={handleValuesChange} onClear={handleClearForm} />
           </div>
           <div className="lg:col-span-3">
             <ResultsDisplay results={results} />
