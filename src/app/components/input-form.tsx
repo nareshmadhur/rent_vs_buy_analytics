@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info, Euro, Percent, Trash2, CalendarClock, TrendingUp, Handshake, Calculator } from 'lucide-react';
+import { Info, Euro, Percent, Trash2, CalendarClock, TrendingUp, Calculator, Handshake } from 'lucide-react';
 import type { AnalysisFormValues } from '@/lib/schema';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -54,7 +54,6 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
     if (isFirstTimeBuyer) {
       form.setValue('propertyTransferTaxPercentage', 0, { shouldValidate: true });
     } else {
-      // Reset to default or last known value if needed. Here we reset to 2.
       form.setValue('propertyTransferTaxPercentage', 2, { shouldValidate: true });
     }
   }, [isFirstTimeBuyer, form]);
@@ -172,7 +171,7 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
             <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
               <AccordionItem value="item-1">
                 <AccordionTrigger>
-                  <h3 className="text-lg font-medium text-primary">Advanced: Taxes & Assumptions</h3>
+                  <h3 className="text-lg font-medium text-primary">Advanced: Costs, Taxes & Assumptions</h3>
                 </AccordionTrigger>
                 <AccordionContent className="pt-4">
                   <div className="space-y-6">
@@ -265,7 +264,7 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
               </AccordionItem>
               <AccordionItem value="item-2">
                 <AccordionTrigger>
-                   <h3 className="text-lg font-medium text-primary">Stage 3: Long-Term & Subsidy</h3>
+                   <h3 className="text-lg font-medium text-primary">Long-Term Projections & Subsidies</h3>
                 </AccordionTrigger>
                 <AccordionContent className="pt-4">
                    <div className="space-y-6">
@@ -289,6 +288,18 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
                               <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                               <FormControl>
                                 <Input type="number" step="0.1" placeholder="e.g., 2.5" {...field} className="pl-8" onChange={e => field.onChange(transformFloat.output(e))} value={field.value ?? ''} />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                         <FormField control={form.control} name="estimatedSellingCostsPercentage" render={({ field }) => (
+                          <FormItem className="sm:col-span-2">
+                            <LabelWithTooltip label="Est. Selling Costs (%)" tooltip="Costs to sell the property (e.g. agent fees), as a percentage of the sale price. Typically 1-2%." />
+                            <div className="relative">
+                              <Handshake className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <FormControl>
+                                <Input type="number" step="0.1" placeholder="e.g., 2" {...field} className="pl-8" onChange={e => field.onChange(transformFloat.output(e))} value={field.value ?? ''} />
                               </FormControl>
                             </div>
                             <FormMessage />
@@ -345,5 +356,3 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
     </Card>
   );
 }
-
-    

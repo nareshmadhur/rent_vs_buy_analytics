@@ -5,7 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import CostComparisonChart from './cost-comparison-chart';
 import { formatCurrency } from '@/lib/utils';
-import { TrendingUp, TrendingDown, Wallet, Home, Building, PiggyBank, BadgePercent, Landmark, Info, BarChart, Trophy, FileText } from 'lucide-react';
+import { Wallet, Home, Building, PiggyBank, BadgePercent, Landmark, Info, BarChart, Trophy, FileText } from 'lucide-react';
 import type { CalculationOutput } from '@/lib/calculations';
 import { Skeleton } from '@/components/ui/skeleton';
 import ProjectionChart from './projection-chart';
@@ -92,9 +92,9 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
     monthlyInterest,
     monthlyPrincipal,
     monthlyMaintenance,
+    realizedValueOnSale,
   } = results;
 
-  const finalEquity = projection.length > 0 ? projection[projection.length - 1].accumulatedEquity : 0;
   const stayDuration = projection.length > 0 ? projection[projection.length - 1].year : 0;
   const doesBreakeven = breakevenPoint !== null;
 
@@ -124,11 +124,11 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
             <CardHeader className="flex flex-row items-center gap-4 space-y-0">
             <Trophy className={`w-8 h-8 ${doesBreakeven ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'}`} />
             <div>
-                <CardTitle>Financial Breakeven Point</CardTitle>
+                <CardTitle>True Financial Breakeven</CardTitle>
                 <CardDescription className={doesBreakeven ? "text-green-800 dark:text-green-300" : "text-amber-800 dark:text-amber-300"}>
                 {doesBreakeven
                     ? `Buying becomes cheaper than renting in Year ${breakevenPoint}.`
-                    : `Buying does not break even with renting within your ${stayDuration}-year timeline.`}
+                    : `Buying does not break even with renting within the ${stayDuration}-year timeline.`}
                 </CardDescription>
             </div>
             </CardHeader>
@@ -137,11 +137,11 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
             <CardHeader className="flex flex-row items-center gap-4 space-y-0">
             <PiggyBank className="w-8 h-8 text-primary" />
             <div>
-                <CardTitle>Projected Equity</CardTitle>
+                <CardTitle>Net Realized Value</CardTitle>
                 <CardDescription>
-                    After {stayDuration} years, you could accumulate
-                    <span className="font-bold text-foreground"> {formatCurrency(finalEquity)} </span>
-                    in home equity.
+                    After {stayDuration} years, selling could net you
+                    <span className="font-bold text-foreground"> {formatCurrency(realizedValueOnSale)} </span>
+                    in cash.
                 </CardDescription>
             </div>
             </CardHeader>
@@ -154,7 +154,7 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
             <BarChart className="w-5 h-5" />
             {stayDuration}-Year Financial Projection
           </CardTitle>
-          <CardDescription>Comparing the total cumulative costs and equity growth over time.</CardDescription>
+          <CardDescription>Comparing the total cumulative costs and equity growth over time, including asset realization.</CardDescription>
         </CardHeader>
         <CardContent className="pl-2">
           <ProjectionChart data={projection} breakevenYear={breakevenPoint} />

@@ -7,18 +7,21 @@ import { formatCurrency } from "@/lib/utils"
 import type { YearlyProjection } from "@/lib/calculations"
 
 const chartConfig = {
+  // C4.0 - Cumulative Cash Outflow for Buying
   cumulativeBuyingCost: {
-    label: "Total Buying Costs",
+    label: "Total Buying Outlay",
     color: "hsl(var(--chart-5))",
   },
+  // C4.0 - Cumulative Cash Outflow for Renting
   cumulativeRentingCost: {
-    label: "Total Renting Costs",
+    label: "Total Renting Outlay",
     color: "hsl(var(--chart-2))",
   },
-  accumulatedEquity: {
-    label: "Accumulated Equity",
-    color: "hsl(var(--chart-3))",
-  },
+  // C8.0 & C9.0 - True Net Cost of Ownership (TNO)
+  totalNetOwnershipCost: {
+    label: "True Cost of Owning (after sale)",
+    color: "hsl(var(--chart-3))"
+  }
 } satisfies ChartConfig
 
 interface ProjectionChartProps {
@@ -76,12 +79,13 @@ export default function ProjectionChart({ data, breakevenYear }: ProjectionChart
           </ReferenceLine>
         )}
 
+        {/* This represents the "true" cost of ownership after realizing the asset */}
         <Area
-          dataKey="accumulatedEquity"
+          dataKey="totalNetOwnershipCost"
           type="natural"
-          fill="var(--color-accumulatedEquity)"
-          fillOpacity={0.4}
-          stroke="var(--color-accumulatedEquity)"
+          fill="var(--color-totalNetOwnershipCost)"
+          fillOpacity={0.2}
+          stroke="var(--color-totalNetOwnershipCost)"
           stackId="1"
           strokeWidth={2}
         />
@@ -110,7 +114,7 @@ export default function ProjectionChart({ data, breakevenYear }: ProjectionChart
 
 const CustomLegend = ({ payload }: any) => {
     return (
-      <div className="flex justify-center gap-4 mt-4">
+      <div className="flex justify-center gap-4 mt-4 flex-wrap">
         {payload.map((entry: any, index: number) => (
           <div key={`item-${index}`} className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
@@ -127,14 +131,20 @@ const CustomTooltipContent = (props: any) => {
         return null;
     }
 
+    // Sort payload to match legend order if necessary
+    const orderedPayload = payload.sort((a: any, b: any) => {
+        const order = ['Total Buying Outlay', 'Total Renting Outlay', 'True Cost of Owning (after sale)'];
+        return order.indexOf(a.name) - order.indexOf(b.name);
+    });
+
     return (
       <div className="p-4 bg-card border rounded-lg shadow-lg">
         <p className="font-bold mb-2">{`Year ${label}`}</p>
-        {payload.map((p: any, i: number) => (
+        {orderedPayload.map((p: any, i: number) => (
            <div key={i} className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full" style={{ backgroundColor: p.color }} />
-                <span className="text-sm text-muted-foreground">{p.name}:</span>
-                <span className="text-sm font-bold">{formatCurrency(p.value)}</span>
+                <span className="text-sm text-muted-foreground min-w-[150px]">{p.name}:</span>
+                <span className="text-sm font-bold ml-auto">{formatCurrency(p.value)}</span>
            </div>
         ))}
       </div>
