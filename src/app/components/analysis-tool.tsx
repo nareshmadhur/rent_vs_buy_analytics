@@ -57,11 +57,10 @@ export default function AnalysisTool() {
   });
   
   const onSubmit = useCallback((data: AnalysisFormValues) => {
-    console.log('Form submitted with data:', data);
+    if (isClearingRef.current) return;
     try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
         const calculatedResults = performCalculations(data);
-        console.log('Calculated results:', calculatedResults);
         setResults(calculatedResults);
         setFormErrors(null); // Clear errors on successful calculation
     } catch (error) {
@@ -76,6 +75,7 @@ export default function AnalysisTool() {
   }, [toast]);
 
   const handleValidationErrors = (errors: FieldErrors<AnalysisFormValues>) => {
+    if (isClearingRef.current) return;
     setResults(null); // Clear previous results
     setFormErrors(errors);
   };
@@ -116,7 +116,7 @@ export default function AnalysisTool() {
         }
 
         try {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(values));
+            localStorage.setItem(LOCAL_storage_KEY, JSON.stringify(values));
         } catch (error) {
             console.error("Failed to save to localStorage", error);
         }
@@ -157,7 +157,7 @@ export default function AnalysisTool() {
         // which includes the `watch` effect.
         setTimeout(() => {
             isClearingRef.current = false;
-        }, 0);
+        }, 50);
     }
   }, [form, toast]);
 
