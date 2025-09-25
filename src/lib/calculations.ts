@@ -117,15 +117,31 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
     // C3.0 - C9.0: Long-Term Projection
     const projection: YearlyProjection[] = [];
     let breakevenPoint: number | null = null;
-    let remainingMortgage = M;
+    
+    // Year 0 State
+    const initialPropertyValue = propertyValue + (data.overbidAmount || 0);
+    const initialEquity = initialPropertyValue - M; // Equity from overbid
+    const initialSellingCosts = initialPropertyValue * (data.estimatedSellingCostsPercentage / 100);
+    const initialRealizedValue = initialEquity - initialSellingCosts;
+    const initialTNO = totalUpfrontCosts - initialRealizedValue;
 
+    projection.push({
+        year: 0,
+        cumulativeBuyingCost: totalUpfrontCosts,
+        cumulativeRentingCost: 0,
+        accumulatedEquity: Math.max(0, initialEquity),
+        propertyValue: initialPropertyValue,
+        totalNetOwnershipCost: initialTNO,
+    });
+
+    let remainingMortgage = M;
     const annualNetBuyingCashOutflow = totalNetMonthlyBuyingCost * 12;
     const annualNetRentingCost = netMonthlyRentalCost * 12;
     let cumulativeBuyingCashOutflow = totalUpfrontCosts;
     let cumulativeRentingCost = 0;
     
     // The initial property value for appreciation calculations is the purchase price (mortgage + overbid)
-    let currentPropertyValue = propertyValue + (data.overbidAmount || 0);
+    let currentPropertyValue = initialPropertyValue;
 
     for (let year = 1; year <= data.intendedLengthOfStay; year++) {
         // C4.0: Cumulative Cost Tracking (Cash Outflow)

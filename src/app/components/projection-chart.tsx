@@ -62,7 +62,7 @@ export default function ProjectionChart({ data, breakevenYear }: ProjectionChart
         />
         <Legend content={<CustomLegend />} />
 
-        {breakevenYear && (
+        {breakevenYear && breakevenYear > 0 && (
           <ReferenceLine
             x={breakevenYear}
             stroke="hsl(var(--primary))"
@@ -137,9 +137,11 @@ const CustomTooltipContent = (props: any) => {
         return order.indexOf(a.name) - order.indexOf(b.name);
     });
 
+    const yearLabel = label === 0 ? "Year 0 (At Purchase)" : `Year ${label}`;
+
     return (
       <div className="p-4 bg-card border rounded-lg shadow-lg">
-        <p className="font-bold mb-2">{`Year ${label}`}</p>
+        <p className="font-bold mb-2">{yearLabel}</p>
         {orderedPayload.map((p: any, i: number) => (
            <div key={i} className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full" style={{ backgroundColor: p.color }} />
