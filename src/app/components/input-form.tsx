@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info, Euro, Percent, Trash2, CalendarClock, TrendingUp, Handshake } from 'lucide-react';
+import { Info, Euro, Percent, Trash2, CalendarClock, TrendingUp, Handshake, Calculator } from 'lucide-react';
 import type { AnalysisFormValues } from '@/lib/schema';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -18,7 +18,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 interface InputFormProps {
   form: UseFormReturn<AnalysisFormValues>;
-  onValuesChange: (values: AnalysisFormValues) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   onClear: () => void;
 }
 
@@ -38,13 +38,7 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
   </div>
 );
 
-export default function InputForm({ form, onValuesChange, onClear }: InputFormProps) {
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      onValuesChange(value as AnalysisFormValues);
-    });
-    return () => subscription.unsubscribe();
-  }, [form, onValuesChange]);
+export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
 
   const isFirstTimeBuyer = useWatch({
     control: form.control,
@@ -87,9 +81,9 @@ export default function InputForm({ form, onValuesChange, onClear }: InputFormPr
         <CardTitle>Input Wizard</CardTitle>
         <CardDescription>Enter your details to start the analysis.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={onSubmit}>
+          <CardContent className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-primary">Personal & Financials</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -175,7 +169,7 @@ export default function InputForm({ form, onValuesChange, onClear }: InputFormPr
               </div>
             </div>
             
-            <Accordion type="single" collapsible className="w-full">
+            <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
               <AccordionItem value="item-1">
                 <AccordionTrigger>
                   <h3 className="text-lg font-medium text-primary">Advanced: Taxes & Assumptions</h3>
@@ -335,15 +329,19 @@ export default function InputForm({ form, onValuesChange, onClear }: InputFormPr
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-          </form>
-        </Form>
-      </CardContent>
-      <CardFooter>
-         <Button variant="ghost" size="sm" onClick={onClear} className="text-muted-foreground">
-            <Trash2 className="mr-2 h-4 w-4" />
-            Clear Form
-        </Button>
-      </CardFooter>
+          </CardContent>
+          <CardFooter className="flex-col items-stretch gap-4">
+            <Button type="submit" size="lg" className="w-full">
+              <Calculator className="mr-2 h-5 w-5" />
+              Analyze
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onClear} className="text-muted-foreground self-center">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear Form
+            </Button>
+          </CardFooter>
+        </form>
+      </Form>
     </Card>
   );
 }

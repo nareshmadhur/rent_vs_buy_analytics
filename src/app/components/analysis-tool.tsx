@@ -47,7 +47,7 @@ export default function AnalysisTool() {
 
   const form = useForm<AnalysisFormValues>({
     resolver: zodResolver(analysisSchema),
-    mode: 'onChange',
+    mode: 'onSubmit',
     defaultValues: initialDefaultValues,
   });
 
@@ -59,21 +59,30 @@ export default function AnalysisTool() {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        const validation = analysisSchema.safeParse(parsedData);
-        if (validation.success) {
-          initialData = { ...initialDefaultValues, ...validation.data };
-        }
+        // We only parse, we don't validate here on load.
+        // The user can re-submit to validate and calculate.
+        initialData = { ...initialDefaultValues, ...parsedData };
       }
     } catch (error) {
       console.error("Failed to read from localStorage", error);
     }
     form.reset(initialData);
 
-     // Trigger initial calculation
-    const calculatedResults = performCalculations(form.getValues());
-    setResults(calculatedResults);
-
   }, [form, isClient]); 
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    const subscription = form.watch((values) => {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(values));
+        } catch (error) {
+            console.error("Failed to save to localStorage", error);
+        }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form, isClient]);
 
   const handleClearForm = useCallback(() => {
     try {
@@ -94,30 +103,23 @@ export default function AnalysisTool() {
     }
   }, [form, toast]);
 
-  const handleValuesChange = (data: AnalysisFormValues) => {
+  const onSubmit = (data: AnalysisFormValues) => {
     try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+        const calculatedResults = performCalculations(data);
+        setResults(calculatedResults);
+        toast({
+            title: "Analysis Complete",
+            description: "Your results have been updated.",
+        });
     } catch (error) {
-      console.error("Failed to save to localStorage", error);
-      toast({
-        variant: "destructive",
-        title: "Could not save data",
-        description: "Your changes will not be saved for the next session."
-      });
-    }
-
-    analysisSchema.safeParseAsync(data)
-      .then(validationResult => {
-        if (validationResult.success) {
-          const calculatedResults = performCalculations(validationResult.data);
-          setResults(calculatedResults);
-        } else {
-          setResults(null);
-        }
-      })
-      .catch(() => {
         setResults(null);
-      });
+        toast({
+            variant: "destructive",
+            title: "Calculation Error",
+            description: "An unexpected error occurred during calculation."
+        });
+    }
   };
 
   return (
@@ -129,7 +131,7 @@ export default function AnalysisTool() {
       <div className="flex-grow container mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
-            <InputForm form={form} onValuesChange={handleValuesChange} onClear={handleClearForm} />
+            <InputForm form={form} onSubmit={form.handleSubmit(onSubmit)} onClear={handleClearForm} />
           </div>
           <div className="lg:col-span-3">
             <ResultsDisplay results={results} />
