@@ -43,52 +43,48 @@ interface CostComparisonChartProps {
   };
 }
 
-const CustomTooltip = ({ active, payload, label, ...props }: any) => {
+const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      // The `name` comes from the Bar's `name` prop, which identifies the hovered segment
-      const hoveredData = payload.find((p: any) => p.name === props.tooltipIdentifier);
+      const data = payload[0].payload;
+      const hoveredDataKey = payload[0].dataKey;
       
-      if (!hoveredData) return null;
+      const isBuyingStack = ['principal', 'interest', 'maintenance', 'ewf'].includes(hoveredDataKey);
+      
+      if (isBuyingStack) {
+        const totalBuyingGross = data.principal + data.interest + data.maintenance + data.ewf;
+        const taxBenefit = data.taxBenefit;
+        const totalNet = totalBuyingGross - taxBenefit;
+        
+        return (
+          <div className="p-3 bg-card border rounded-lg shadow-lg max-w-sm">
+            <h4 className="font-bold text-base mb-2">Buying Cost Breakdown</h4>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between"><span>Principal (Equity):</span> <span className="font-medium">{formatCurrency(data.principal)}</span></div>
+              <div className="flex justify-between"><span>Interest Cost:</span> <span className="font-medium">{formatCurrency(data.interest)}</span></div>
+              <div className="flex justify-between"><span>Maintenance:</span> <span className="font-medium">{formatCurrency(data.maintenance)}</span></div>
+              <div className="flex justify-between"><span>EWF Tax:</span> <span className="font-medium">{formatCurrency(data.ewf)}</span></div>
+            </div>
+            <div className="border-t my-2"></div>
+            <div className="flex justify-between text-sm"><strong>Gross Monthly Cost:</strong> <strong className="font-bold">{formatCurrency(totalBuyingGross)}</strong></div>
+            <div className="flex justify-between text-sm text-green-600"><span>Tax Benefit:</span> <span>-{formatCurrency(taxBenefit)}</span></div>
+            <div className="border-t my-2"></div>
+            <div className="flex justify-between font-bold text-base"><strong>Net Monthly Cost:</strong> <strong>{formatCurrency(totalNet)}</strong></div>
+          </div>
+        );
 
-      const { value, name } = hoveredData;
-      const dataKey = name as keyof typeof chartConfig;
-
-      let description = '';
-
-      switch(dataKey) {
-        case 'rent': description = 'Your monthly rent after any subsidies.'; break;
-        case 'principal': description = 'The part of your payment that builds home equity.'; break;
-        case 'interest': description = 'The cost of borrowing, before tax deductions.'; break;
-        case 'maintenance': description = 'Estimated monthly cost for upkeep.'; break;
-        case 'ewf': description = 'The notional rental value tax you pay as a homeowner.'; break;
-        default: description = 'A component of your housing cost.';
+      } else { // It's the rent bar
+        const rentValue = data.rent;
+        return (
+            <div className="p-3 bg-card border rounded-lg shadow-lg max-w-xs">
+                <p className="font-bold text-base mb-1">{chartConfig.rent.label}: {formatCurrency(rentValue)}</p>
+                <p className="text-sm text-muted-foreground">Your monthly rent after any subsidies.</p>
+            </div>
+        );
       }
-      
-      const isBuyingSegment = hoveredData.payload.stackId === 'buy';
-      
-      const fullPayload = hoveredData.payload;
-      const totalBuyingGross = fullPayload.principal + fullPayload.interest + fullPayload.maintenance + fullPayload.ewf;
-      const taxBenefit = fullPayload.taxBenefit;
-
-
-      return (
-        <div className="p-3 bg-card border rounded-lg shadow-lg max-w-xs">
-          <p className="font-bold text-base mb-1">{chartConfig[dataKey]?.label}: {formatCurrency(value)}</p>
-          <p className="text-sm text-muted-foreground mb-2">{description}</p>
-          {isBuyingSegment && (
-             <div className="border-t pt-2 mt-2">
-                <p className="text-xs">
-                    The total gross monthly buying cost is <span className="font-bold">{formatCurrency(totalBuyingGross)}</span>.
-                    After a tax benefit of <span className="font-bold text-green-600">-{formatCurrency(taxBenefit)}</span>, the net cost is <span className="font-bold">{formatCurrency(totalBuyingGross - taxBenefit)}</span>.
-                </p>
-             </div>
-          )}
-        </div>
-      );
     }
   
     return null;
-  };
+};
 
 export default function CostComparisonChart({ rentingCost, buyingCostBreakdown }: CostComparisonChartProps) {
   const chartData = [
@@ -128,13 +124,13 @@ export default function CostComparisonChart({ rentingCost, buyingCostBreakdown }
         <Legend />
         
         {/* Rent Bar */}
-        <Bar dataKey="rent" name="rent" fill="var(--color-rent)" radius={4} stackId="rent" />
+        <Bar dataKey="rent" name="Net Rent" fill="var(--color-rent)" radius={4} stackId="rent" />
 
         {/* Buying Bar - Stacked */}
-        <Bar dataKey="principal" name="principal" fill="var(--color-principal)" radius={[4, 4, 0, 0]} stackId="buy" />
-        <Bar dataKey="interest" name="interest" fill="var(--color-interest)" stackId="buy" />
-        <Bar dataKey="maintenance" name="maintenance" fill="var(--color-maintenance)" stackId="buy" />
-        <Bar dataKey="ewf" name="ewf" fill="var(--color-ewf)" radius={[0, 0, 0, 0]} stackId="buy" />
+        <Bar dataKey="principal" name="Principal (Equity)" fill="var(--color-principal)" radius={[4, 4, 0, 0]} stackId="buy" />
+        <Bar dataKey="interest" name="Interest Cost" fill="var(--color-interest)" stackId="buy" />
+        <Bar dataKey="maintenance" name="Maintenance" fill="var(--color-maintenance)" stackId="buy" />
+        <Bar dataKey="ewf" name="EWF Tax" fill="var(--color-ewf)" radius={[0, 0, 0, 0]} stackId="buy" />
 
       </BarChart>
     </ChartContainer>
