@@ -64,7 +64,7 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
         <CardHeader className="text-center">
           <Info className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <CardTitle className="text-2xl">Awaiting Your Analysis</CardTitle>
-          <CardDescription>Fill in all fields on the left to see your results.</CardDescription>
+          <CardDescription>Fill in all fields on the left and click "Analyze".</CardDescription>
         </CardHeader>
         <CardContent className="w-full max-w-md space-y-4 p-6">
             <div className="space-y-2">
@@ -82,7 +82,6 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
   const {
     totalUpfrontCosts,
     totalNetMonthlyBuyingCost,
-    currentRentalExpenses,
     monthlyCostDifferential,
     monthlyEquityAccumulation,
     monthlyTaxBenefit,
@@ -91,6 +90,9 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
     huurtoeslagAmount,
     projection,
     breakevenPoint,
+    monthlyInterest,
+    monthlyPrincipal,
+    monthlyMaintenance,
   } = results;
 
   const isBuyingCheaper = monthlyCostDifferential < 0;
@@ -107,7 +109,13 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
         <CardContent className="pl-2">
           <CostComparisonChart
             rentingCost={netMonthlyRentalCost}
-            buyingCost={totalNetMonthlyBuyingCost}
+            buyingCostBreakdown={{
+                principal: monthlyPrincipal,
+                interest: monthlyInterest,
+                maintenance: monthlyMaintenance,
+                ewf: monthlyEwfCost,
+                taxBenefit: monthlyTaxBenefit,
+            }}
           />
         </CardContent>
       </Card>
@@ -145,12 +153,12 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart className="w-5 h-5" />
-            10-Year Financial Projection
+            {stayDuration}-Year Financial Projection
           </CardTitle>
           <CardDescription>Comparing the total cumulative costs and equity growth over time.</CardDescription>
         </CardHeader>
         <CardContent className="pl-2">
-          <ProjectionChart data={projection} />
+          <ProjectionChart data={projection} breakevenYear={breakevenPoint} />
         </CardContent>
       </Card>
 
