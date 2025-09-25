@@ -20,10 +20,15 @@ export default function AnalysisTool() {
     resolver: zodResolver(analysisSchema),
     mode: 'onChange',
     defaultValues: {
+      age: undefined,
+      annualIncome: undefined,
       employmentStatus: 'employed',
+      savings: 0,
+      currentRentalExpenses: undefined,
+      maxMortgage: undefined,
+      interestRate: undefined,
       upfrontCostPercentage: 5,
       maintenancePercentage: 1,
-      savings: 0,
     },
   });
 

@@ -41,6 +41,22 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
     return () => subscription.unsubscribe();
   }, [form, onValuesChange]);
 
+  const transform = {
+    input: (value: any) => (isNaN(value) ? '' : value),
+    output: (e: React.ChangeEvent<HTMLInputElement>) => {
+      const output = parseInt(e.target.value, 10);
+      return isNaN(output) ? 0 : output;
+    },
+  };
+
+  const transformFloat = {
+    input: (value: any) => (isNaN(value) ? '' : value),
+    output: (e: React.ChangeEvent<HTMLInputElement>) => {
+      const output = parseFloat(e.target.value);
+      return isNaN(output) ? 0 : output;
+    },
+  };
+
   return (
     <Card className="sticky top-6">
       <CardHeader>
@@ -57,7 +73,7 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                   <FormItem>
                     <FormLabel>Age</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g., 30" {...field} />
+                      <Input type="number" placeholder="e.g., 30" {...field} onChange={e => field.onChange(transform.output(e))} value={transform.input(field.value)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -90,7 +106,7 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                     <div className="relative">
                       <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 60000" {...field} className="pl-8" />
+                        <Input type="number" placeholder="e.g., 60000" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={transform.input(field.value)} />
                       </FormControl>
                     </div>
                     <FormMessage />
@@ -102,7 +118,7 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                     <div className="relative">
                       <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 25000" {...field} className="pl-8" />
+                        <Input type="number" placeholder="e.g., 25000" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={transform.input(field.value)} />
                       </FormControl>
                     </div>
                     <FormMessage />
@@ -114,7 +130,7 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                     <div className="relative">
                       <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 1500" {...field} className="pl-8" />
+                        <Input type="number" placeholder="e.g., 1500" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={transform.input(field.value)} />
                       </FormControl>
                     </div>
                     <FormMessage />
@@ -126,7 +142,7 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                     <div className="relative">
                       <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 300000" {...field} className="pl-8" />
+                        <Input type="number" placeholder="e.g., 300000" {...field} className="pl-8" onChange={e => field.onChange(transform.output(e))} value={transform.input(field.value)} />
                       </FormControl>
                     </div>
                     <FormMessage />
@@ -142,7 +158,7 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                   <FormItem>
                     <LabelWithTooltip label="Interest Rate (%)" tooltip="The annual mortgage interest rate. Check with your advisor for a current estimate." />
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="e.g., 4.1" {...field} />
+                      <Input type="number" step="0.01" placeholder="e.g., 4.1" {...field} onChange={e => field.onChange(transformFloat.output(e))} value={transformFloat.input(field.value)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,7 +167,7 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                   <FormItem>
                     <LabelWithTooltip label="Upfront Costs (%)" tooltip="One-time buying costs (kosten koper) as a percentage of the purchase price. Includes transfer tax, notary fees, etc. Typically 4-6%." />
                     <FormControl>
-                      <Input type="number" step="0.1" placeholder="e.g., 5" {...field} />
+                      <Input type="number" step="0.1" placeholder="e.g., 5" {...field} onChange={e => field.onChange(transformFloat.output(e))} value={transformFloat.input(field.value)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -160,7 +176,7 @@ export default function InputForm({ form, onValuesChange }: InputFormProps) {
                   <FormItem>
                     <LabelWithTooltip label="Maintenance (%)" tooltip="Annual maintenance costs as a percentage of the purchase price. A common estimate is 1%." />
                     <FormControl>
-                      <Input type="number" step="0.1" placeholder="e.g., 1" {...field} />
+                      <Input type="number" step="0.1" placeholder="e.g., 1" {...field} onChange={e => field.onChange(transformFloat.output(e))} value={transformFloat.input(field.value)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
