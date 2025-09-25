@@ -53,7 +53,7 @@ const QualitativeFactors = () => (
             </div>
              <div>
                 <h4 className="font-semibold">Emotional Value (Advantage: Buying)</h4>
-                <p className="text-muted-foreground">For many, owning a home provides a deep sense of security, community, and personal accomplishment that can't be quantified.</p>
+                <p className="text-muted-foreground">For many, owning a home provides a deep sense of security, community, and personal accomplishment that cannot be quantified.</p>
             </div>
         </CardContent>
     </Card>
@@ -99,6 +99,7 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
 
   const stayDuration = projection.length > 0 ? projection[projection.length - 1].year : 0;
   const doesBreakeven = breakevenPoint !== null && breakevenPoint <= stayDuration;
+  const breakevenData = breakevenPoint ? projection[breakevenPoint - 1] : null;
 
   return (
     <div className="space-y-6">
@@ -137,12 +138,45 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
                     </Tooltip>
                 </TooltipProvider>
               </div>
-              <p className={`text-sm ${doesBreakeven ? "text-green-800 dark:text-green-300" : "text-amber-800 dark:text-amber-300"}`}>
-                  {doesBreakeven
-                      ? `Based on your inputs, buying becomes cheaper than renting in Year ${breakevenPoint}.`
-                      : `Buying does not financially break even with renting within your ${stayDuration}-year timeline.`}
-              </p>
             </CardHeader>
+            <CardContent>
+              <p className={`text-sm mb-4 ${doesBreakeven ? "text-green-800 dark:text-green-300" : "text-amber-800 dark:text-amber-300"}`}>
+                {doesBreakeven && breakevenData
+                    ? `Buying becomes cheaper than renting in Year ${breakevenPoint}. Here's the math for that year:`
+                    : `Buying does not financially break even with renting within your ${stayDuration}-year timeline.`}
+              </p>
+              {doesBreakeven && breakevenData && (
+                <div className="text-xs space-y-2 text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>Total Rent Paid by Year {breakevenPoint}:</span>
+                    <span className="font-medium text-foreground">{formatCurrency(breakevenData.cumulativeRentingCost)}</span>
+                  </div>
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between">
+                      <span>Total Buying Costs Paid:</span>
+                      <span className="font-medium text-foreground">{formatCurrency(breakevenData.cumulativeBuyingCost)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>- Est. Value from Sale:</span>
+                      <span className="font-medium text-green-600">-{formatCurrency(breakevenData.propertyValue - breakevenData.totalNetOwnershipCost - totalUpfrontCosts)}</span>
+                    </div>
+                    <div className="border-t my-1"></div>
+                    <div className="flex justify-between font-bold">
+                      <span>= True Cost of Owning:</span>
+                      <span className="text-foreground">{formatCurrency(breakevenData.totalNetOwnershipCost)}</span>
+                    </div>
+                  </div>
+                   <p className="text-xs pt-2">
+                    This is the "breakeven" because the True Cost of Owning ({formatCurrency(breakevenData.totalNetOwnershipCost)}) is now less than the Total Rent Paid ({formatCurrency(breakevenData.cumulativeRentingCost)}).
+                  </p>
+                </div>
+              )}
+               {!doesBreakeven && (
+                 <p className="text-xs text-muted-foreground">
+                   Based on your projections, the high upfront costs of buying are not recovered through equity and appreciation within your planned stay, making renting the cheaper option over this period.
+                 </p>
+               )}
+            </CardContent>
         </Card>
          <Card>
             <CardHeader className="flex flex-row items-center gap-4 space-y-0">
