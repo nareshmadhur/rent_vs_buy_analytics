@@ -8,6 +8,7 @@ export const analysisSchema = z.object({
   savings: z.coerce.number({ required_error: "Savings is required." }).min(0, { message: "Savings cannot be negative." }),
   currentRentalExpenses: z.coerce.number({ required_error: "Current rent is required." }).positive({ message: "Rent must be a positive number." }),
   maxMortgage: z.coerce.number({ required_error: "Max mortgage is required." }).positive({ message: "Mortgage must be a positive number." }),
+  overbidAmount: z.coerce.number().nonnegative({ message: "Overbid must be a non-negative number." }).default(0),
   interestRate: z.coerce.number({ required_error: "Interest rate is required." }).positive({ message: "Rate must be a positive number." }).max(20, { message: "Rate seems too high." }),
   propertyTransferTaxPercentage: z.coerce.number().nonnegative({ message: "Percentage must be non-negative." }).max(10, { message: "Percentage seems too high." }).default(2),
   otherUpfrontCostsPercentage: z.coerce.number({ required_error: "Other costs are required." }).nonnegative({ message: "Percentage must be non-negative." }).max(10, { message: "Percentage seems too high." }).default(3),

@@ -75,8 +75,8 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
     const monthlyInterest = M * monthlyRate;
     const monthlyPrincipal = grossMonthlyMortgage - monthlyInterest;
 
-    // Estimated Sale Price (Purchase Price)
-    const P = data.maxMortgage + data.savings;
+    // Agreed Purchase Price (P) is mortgage + overbid + savings contribution
+    const P = data.maxMortgage + (data.overbidAmount || 0) + data.savings;
 
     // L1.0 & P2.0: Monthly Tax Benefit (MID)
     const monthlyTaxBenefit = data.midEligible && monthlyInterest > 0
@@ -86,11 +86,11 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
     // P3.0: Monthly Eigenwoningforfait Cost (EWF)
     const monthlyEwfCost = (P * EWF_RATE) / 12;
 
-    // P4.0: Total Upfront Costs
+    // P4.0: Total Upfront Costs - REVISED
     const isTransferTaxWaived = data.isFirstTimeBuyer && data.age < 35;
     const transferTaxCost = isTransferTaxWaived ? 0 : P * (data.propertyTransferTaxPercentage / 100);
     const otherCosts = P * (data.otherUpfrontCostsPercentage / 100);
-    const totalUpfrontCosts = transferTaxCost + otherCosts;
+    const totalUpfrontCosts = transferTaxCost + otherCosts + (data.overbidAmount || 0);
 
     // Estimated Monthly Maintenance
     const monthlyMaintenance = (P * (data.maintenancePercentage / 100)) / 12;
@@ -150,8 +150,6 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
         });
 
         // C9.0: True Financial Breakeven Point Determination
-        // The check is now `totalNetOwnershipCost < cumulativeRentingCost` and we ensure it cannot happen in the first year 
-        // by only checking from year 1 onwards, where cumulative costs have had time to diverge.
         if (breakevenPoint === null && totalNetOwnershipCost < cumulativeRentingCost) {
             breakevenPoint = year;
         }

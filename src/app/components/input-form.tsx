@@ -153,13 +153,25 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
                                 <FormMessage />
                             </FormItem>
                             )} />
-                            <FormField control={form.control} name="maxMortgage" render={({ field }) => (
+                             <FormField control={form.control} name="maxMortgage" render={({ field }) => (
                             <FormItem>
-                                <LabelWithTooltip label="Max Mortgage Amount" tooltip="The maximum amount you can borrow, as indicated by a mortgage advisor (hypotheekadviseur)." />
+                                <LabelWithTooltip label="Mortgage Amount (M)" tooltip="The amount you will finance with a loan. The purchase price is this amount plus any part of your savings you use." />
                                 <div className="relative">
                                 <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <FormControl>
                                     <Input type="number" placeholder="e.g., 300000" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
+                                </FormControl>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                            )} />
+                             <FormField control={form.control} name="overbidAmount" render={({ field }) => (
+                            <FormItem>
+                                <LabelWithTooltip label="Overbid Amount (O)" tooltip="The amount you bid over the property's official valuation. This amount must be paid from your savings and cannot be mortgaged." />
+                                <div className="relative">
+                                <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <FormControl>
+                                    <Input type="number" placeholder="e.g., 20000" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
                                 <FormMessage />
