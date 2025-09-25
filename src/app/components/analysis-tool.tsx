@@ -38,110 +38,75 @@ const initialDefaultValues: AnalysisFormValues = {
   estimatedSellingCostsPercentage: 2,
 };
 
-
 export default function AnalysisTool() {
   const [results, setResults] = useState<CalculationOutput | null>(null);
   const [formErrors, setFormErrors] = useState<FieldErrors<AnalysisFormValues> | null>(null);
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
-  const isResettingRef = useRef(false);
 
   const form = useForm<AnalysisFormValues>({
     resolver: zodResolver(analysisSchema),
-    mode: 'onChange',
+    mode: 'onChange', // Validate on change to give instant feedback
   });
-  
-  const handleValidationAndSubmit = useCallback((data: AnalysisFormValues) => {
-    try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
-        const calculatedResults = performCalculations(data);
-        setResults(calculatedResults);
-        setFormErrors(null);
-    } catch (error) {
-        console.error('Caught an error during calculation:', error);
-        setResults(null);
-        toast({
-            variant: "destructive",
-            title: "Calculation Error",
-            description: "An unexpected error occurred during calculation."
-        });
-    }
-  }, [toast]);
-  
-  const handleValidationErrors = (errors: FieldErrors<AnalysisFormValues>) => {
-    setResults(null); 
-    setFormErrors(errors);
-  };
 
+  // Effect for initial load from localStorage or defaults
   useEffect(() => {
     setIsClient(true);
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+      let dataToLoad: AnalysisFormValues;
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        const validatedData = analysisSchema.safeParse(parsedData);
-        if (validatedData.success) {
-          form.reset(validatedData.data);
+        const validation = analysisSchema.safeParse(parsedData);
+        if (validation.success) {
+          dataToLoad = validation.data;
         } else {
-          form.reset(initialDefaultValues);
+          // Saved data is invalid, use defaults
+          dataToLoad = initialDefaultValues;
         }
       } else {
-        form.reset(initialDefaultValues);
+        // No saved data, use defaults
+        dataToLoad = initialDefaultValues;
       }
+      form.reset(dataToLoad);
+      setResults(performCalculations(dataToLoad));
+
     } catch (error) {
       console.error("Failed to read from localStorage, using defaults", error);
       form.reset(initialDefaultValues);
+      setResults(performCalculations(initialDefaultValues));
     }
   }, [form]);
 
 
+  // Effect for watching changes and re-calculating/saving
   useEffect(() => {
-    const subscription = form.watch((value, { name, type }) => {
-      if (isResettingRef.current) {
-        return;
+    const subscription = form.watch((values, { name, type }) => {
+      // Don't do anything if not a client yet
+      if (!isClient) return;
+
+      const validation = analysisSchema.safeParse(values);
+      if (validation.success) {
+        setResults(performCalculations(validation.data));
+        setFormErrors(null);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(validation.data));
+      } else {
+        setResults(null);
+        setFormErrors(validation.error.formErrors.fieldErrors);
       }
-      form.trigger().then(isValid => {
-          if (isValid) {
-              handleValidationAndSubmit(form.getValues());
-          } else {
-              handleValidationErrors(form.formState.errors);
-          }
-      });
     });
     return () => subscription.unsubscribe();
-  }, [form, handleValidationAndSubmit]);
-
-  useEffect(() => {
-    // This effect helps to reset the ref after a reset action is complete.
-    if (form.formState.isDirty && isResettingRef.current) {
-        isResettingRef.current = false;
-    }
-  }, [form.formState.isDirty]);
-
+  }, [form, isClient]);
 
   const handleClearForm = useCallback(() => {
-    try {
-      isResettingRef.current = true;
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      form.reset({}); 
-      setResults(null);
-      setFormErrors({});
-      toast({
-        title: "Form Cleared",
-        description: "Your inputs have been cleared.",
-      });
-       // Use a timeout to reset the flag after the current event loop
-      setTimeout(() => {
-        isResettingRef.current = false;
-      }, 0);
-    } catch (error) {
-      console.error("Failed to clear localStorage", error);
-      toast({
-        variant: "destructive",
-        title: "Could not clear data",
-        description: "There was an issue clearing the form data."
-      });
-    }
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    form.reset({});
+    setResults(null);
+    setFormErrors(null);
+    toast({
+      title: "Form Cleared",
+      description: "Your inputs have been cleared.",
+    });
   }, [form, toast]);
 
 

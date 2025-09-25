@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect } from 'react';
@@ -53,7 +52,10 @@ export default function InputForm({ form, onClear }: InputFormProps) {
     if (isFirstTimeBuyer) {
       form.setValue('propertyTransferTaxPercentage', 0, { shouldValidate: true });
     } else {
-      form.setValue('propertyTransferTaxPercentage', 2, { shouldValidate: true });
+      // Only set to 2 if the value is currently 0 from the switch
+      if (form.getValues('propertyTransferTaxPercentage') === 0) {
+        form.setValue('propertyTransferTaxPercentage', 2, { shouldValidate: true });
+      }
     }
   }, [isFirstTimeBuyer, form]);
   
@@ -73,7 +75,7 @@ export default function InputForm({ form, onClear }: InputFormProps) {
         <CardDescription>Enter your details to see the live analysis.</CardDescription>
       </CardHeader>
       <Form {...form}>
-        <form>
+        <form onSubmit={(e) => e.preventDefault()}>
           <CardContent>
             <Accordion type="single" collapsible className="w-full" defaultValue={'personal'}>
                 <AccordionItem value="personal">
