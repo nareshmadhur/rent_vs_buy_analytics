@@ -365,3 +365,5 @@ export default function InputForm({ form, onClear }: InputFormProps) {
     </Card>
   );
 }
+
+    
