@@ -20,7 +20,6 @@ export type CalculationOutput = {
     monthlyPrincipal: number;
 
     // Costs
-    estimatedSalePrice: number;
     totalUpfrontCosts: number;
     monthlyMaintenance: number;
     
@@ -78,9 +77,8 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
     const monthlyInterest = M * monthlyRate;
     const monthlyPrincipal = grossMonthlyMortgage - monthlyInterest;
 
-    // Agreed Purchase Price (P) is the property's official value, mortgage is based on this.
-    // The total cost to the user includes the overbid.
-    const P = data.maxMortgage + (data.savings - (data.overbidAmount || 0)); // Simplified: assume rest of savings go to value.
+    // The official property value (WOZ-waarde) is assumed to be the mortgage amount.
+    // The total purchase price includes the overbid.
     const propertyValue = data.maxMortgage;
 
     // L1.0 & P2.0: Monthly Tax Benefit (MID)
@@ -125,7 +123,9 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
     const annualNetRentingCost = netMonthlyRentalCost * 12;
     let cumulativeBuyingCashOutflow = totalUpfrontCosts;
     let cumulativeRentingCost = 0;
-    let currentPropertyValue = propertyValue;
+    
+    // The initial property value for appreciation calculations is the purchase price (mortgage + overbid)
+    let currentPropertyValue = propertyValue + (data.overbidAmount || 0);
 
     for (let year = 1; year <= data.intendedLengthOfStay; year++) {
         // C4.0: Cumulative Cost Tracking (Cash Outflow)
@@ -161,8 +161,9 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
     }
     
     // Final realized value at end of term
-    const finalEquity = projection.length > 0 ? projection[projection.length - 1].accumulatedEquity : 0;
-    const finalPropertyValue = projection.length > 0 ? projection[projection.length - 1].propertyValue : propertyValue;
+    const finalProjection = projection[projection.length - 1];
+    const finalEquity = finalProjection ? finalProjection.accumulatedEquity : 0;
+    const finalPropertyValue = finalProjection ? finalProjection.propertyValue : currentPropertyValue;
     const finalSellingCosts = finalPropertyValue * (data.estimatedSellingCostsPercentage / 100);
     const realizedValueOnSale = finalEquity - finalSellingCosts;
 
@@ -170,7 +171,6 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
         grossMonthlyMortgage,
         monthlyInterest,
         monthlyPrincipal,
-        estimatedSalePrice: propertyValue,
         totalUpfrontCosts,
         monthlyMaintenance,
         monthlyTaxBenefit,

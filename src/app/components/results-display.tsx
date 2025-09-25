@@ -2,18 +2,19 @@
 "use client";
 
 import React from 'react';
+import type { FieldErrors } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import CostComparisonChart from './cost-comparison-chart';
 import { formatCurrency } from '@/lib/utils';
-import { Wallet, Home, Building, PiggyBank, BadgePercent, Landmark, Info, BarChart, Trophy, FileText, HelpCircle, TrendingUp, Sparkles, Scale } from 'lucide-react';
-import type { CalculationOutput } from '@/lib/calculations';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Wallet, Home, Building, PiggyBank, BadgePercent, Landmark, Info, BarChart, Trophy, FileText, HelpCircle, TrendingUp, Sparkles, Scale, ListChecks } from 'lucide-react';
+import type { CalculationOutput, AnalysisFormValues } from '@/lib/calculations';
 import ProjectionChart from './projection-chart';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 interface ResultsDisplayProps {
   results: CalculationOutput | null;
+  errors: FieldErrors<AnalysisFormValues> | null;
 }
 
 const StatCard = ({ title, value, description, icon: Icon, colorClass = 'text-primary' }: { title: string, value: string, description?: string, icon: React.ElementType, colorClass?: string }) => (
@@ -109,25 +110,44 @@ const VerdictCard = ({ results }: { results: CalculationOutput }) => {
     );
 }
 
+// Map field names to human-readable labels
+const fieldLabels: { [key in keyof AnalysisFormValues]?: string } = {
+  age: "Age",
+  annualIncome: "Annual Income",
+  savings: "Savings",
+  currentRentalExpenses: "Current Monthly Rent",
+  maxMortgage: "Mortgage Amount",
+  overbidAmount: "Overbid Amount",
+  interestRate: "Interest Rate",
+  marginalTaxRate: "Marginal Tax Rate",
+  intendedLengthOfStay: "Length of Stay",
+  propertyAppreciationRate: "Appreciation Rate",
+  estimatedSellingCostsPercentage: "Est. Selling Costs",
+};
 
-export default function ResultsDisplay({ results }: ResultsDisplayProps) {
+export default function ResultsDisplay({ results, errors }: ResultsDisplayProps) {
   if (!results) {
+    const errorKeys = errors ? Object.keys(errors).filter(key => key in fieldLabels) : [];
     return (
       <Card className="flex flex-col items-center justify-center h-full min-h-[500px] bg-secondary/50 border-dashed">
         <CardHeader className="text-center">
-          <Info className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <ListChecks className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <CardTitle className="text-2xl">Awaiting Your Analysis</CardTitle>
-          <CardDescription>Fill in all fields on the left and click "Analyze".</CardDescription>
+          <CardDescription>
+            {errorKeys.length > 0 ? "Please complete the following fields:" : "Fill in the form to get started."}
+          </CardDescription>
         </CardHeader>
-        <CardContent className="w-full max-w-md space-y-4 p-6">
-            <div className="space-y-2">
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-4 w-3/4 mx-auto" />
-            </div>
-            <div className="space-y-2 pt-4">
-                <Skeleton className="h-40 w-full" />
-            </div>
-        </CardContent>
+        {errorKeys.length > 0 && (
+            <CardContent className="w-full max-w-sm p-6">
+                <ul className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-muted-foreground">
+                    {errorKeys.map((key) => (
+                        <li key={key} className="truncate">
+                            - {fieldLabels[key as keyof AnalysisFormValues]}
+                        </li>
+                    ))}
+                </ul>
+            </CardContent>
+        )}
       </Card>
     );
   }
@@ -177,7 +197,7 @@ export default function ResultsDisplay({ results }: ResultsDisplayProps) {
                 value={formatCurrency(results.inputs.savings - totalUpfrontCosts)}
                 description="After all initial costs are paid."
                 icon={PiggyBank}
-                colorClass="text-green-500"
+                colorClass={(results.inputs.savings - totalUpfrontCosts) >= 0 ? "text-green-500" : "text-red-500"}
             />
         </CardContent>
       </Card>

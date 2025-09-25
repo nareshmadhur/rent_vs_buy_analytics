@@ -12,6 +12,7 @@ import ResultsDisplay from './results-display';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import type { FieldErrors } from 'react-hook-form';
 
 const LOCAL_STORAGE_KEY = 'mortgageAnalysisData';
 
@@ -22,6 +23,7 @@ const initialDefaultValues: AnalysisFormValues = {
   savings: 25000,
   currentRentalExpenses: 1500,
   maxMortgage: 300000,
+  overbidAmount: 20000,
   interestRate: 4.1,
   propertyTransferTaxPercentage: 2,
   otherUpfrontCostsPercentage: 3,
@@ -39,6 +41,7 @@ const initialDefaultValues: AnalysisFormValues = {
 
 export default function AnalysisTool() {
   const [results, setResults] = useState<CalculationOutput | null>(null);
+  const [formErrors, setFormErrors] = useState<FieldErrors<AnalysisFormValues> | null>(null);
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
 
@@ -48,9 +51,34 @@ export default function AnalysisTool() {
 
   const form = useForm<AnalysisFormValues>({
     resolver: zodResolver(analysisSchema),
-    mode: 'onSubmit',
+    mode: 'onChange', // Validate on change
     defaultValues: initialDefaultValues,
   });
+  
+  const onSubmit = (data: AnalysisFormValues) => {
+    console.log('Form submitted with data:', data);
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+        const calculatedResults = performCalculations(data);
+        console.log('Calculated results:', calculatedResults);
+        setResults(calculatedResults);
+        setFormErrors(null); // Clear errors on successful calculation
+    } catch (error) {
+        console.error('Caught an error during calculation:', error);
+        setResults(null);
+        toast({
+            variant: "destructive",
+            title: "Calculation Error",
+            description: "An unexpected error occurred during calculation."
+        });
+    }
+  };
+
+  const handleValidationErrors = (errors: FieldErrors<AnalysisFormValues>) => {
+    setResults(null); // Clear previous results
+    setFormErrors(errors);
+  };
+
 
   useEffect(() => {
     if (!isClient) return;
@@ -60,8 +88,6 @@ export default function AnalysisTool() {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        // We only parse, we don't validate here on load.
-        // The user can re-submit to validate and calculate.
         initialData = { ...initialDefaultValues, ...parsedData };
       }
     } catch (error) {
@@ -69,31 +95,46 @@ export default function AnalysisTool() {
     }
     form.reset(initialData);
 
-  }, [form, isClient]); 
+    // Initial validation check
+    form.trigger().then(isValid => {
+      if (isValid) {
+        onSubmit(form.getValues());
+      } else {
+        handleValidationErrors(form.formState.errors);
+      }
+    });
 
-  const onValuesChange = (values: any) => {
-     try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(values));
-    } catch (error) {
-        console.error("Failed to save to localStorage", error);
-    }
-  }
+  }, [form, isClient]); 
 
   useEffect(() => {
     if (!isClient) return;
 
-    const subscription = form.watch((values) => {
-        onValuesChange(values)
+    const subscription = form.watch((values, { name, type }) => {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(values));
+        } catch (error) {
+            console.error("Failed to save to localStorage", error);
+        }
+        
+        // When a field changes, re-validate and submit if valid
+        form.trigger().then(isValid => {
+           if (isValid) {
+               onSubmit(form.getValues());
+           } else {
+               handleValidationErrors(form.formState.errors);
+           }
+        });
     });
 
     return () => subscription.unsubscribe();
-  }, [form, isClient, onValuesChange]);
+  }, [form, isClient, onSubmit]);
 
   const handleClearForm = useCallback(() => {
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
       form.reset(initialDefaultValues);
       setResults(null);
+      setFormErrors(form.formState.errors); // Re-set errors for the initial state
       toast({
         title: "Form Cleared",
         description: "Your inputs have been reset.",
@@ -108,27 +149,6 @@ export default function AnalysisTool() {
     }
   }, [form, toast]);
 
-  const onSubmit = (data: AnalysisFormValues) => {
-    console.log('Form submitted with data:', data);
-    try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
-        const calculatedResults = performCalculations(data);
-        console.log('Calculated results:', calculatedResults);
-        setResults(calculatedResults);
-        toast({
-            title: "Analysis Complete",
-            description: "Your results have been updated.",
-        });
-    } catch (error) {
-        console.error('Caught an error during calculation:', error);
-        setResults(null);
-        toast({
-            variant: "destructive",
-            title: "Calculation Error",
-            description: "An unexpected error occurred during calculation."
-        });
-    }
-  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -139,10 +159,10 @@ export default function AnalysisTool() {
       <main className="flex-grow container mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
-            <InputForm form={form} onSubmit={form.handleSubmit(onSubmit)} onClear={handleClearForm} />
+            <InputForm form={form} onClear={handleClearForm} />
           </div>
           <div className="lg:col-span-3">
-            <ResultsDisplay results={results} />
+            <ResultsDisplay results={results} errors={formErrors} />
           </div>
         </div>
       </main>

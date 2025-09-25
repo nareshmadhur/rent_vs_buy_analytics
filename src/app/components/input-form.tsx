@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info, Euro, Percent, Trash2, CalendarClock, TrendingUp, Calculator, Handshake } from 'lucide-react';
+import { Info, Euro, Percent, Trash2, CalendarClock, TrendingUp, Handshake } from 'lucide-react';
 import type { AnalysisFormValues } from '@/lib/schema';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -18,7 +18,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 interface InputFormProps {
   form: UseFormReturn<AnalysisFormValues>;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   onClear: () => void;
 }
 
@@ -38,7 +37,7 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
     </div>
   );
 
-export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
+export default function InputForm({ form, onClear }: InputFormProps) {
 
   const isFirstTimeBuyer = useWatch({
     control: form.control,
@@ -71,12 +70,12 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
     <Card className="sticky top-6">
       <CardHeader>
         <CardTitle>Input Wizard</CardTitle>
-        <CardDescription>Enter your details to start the analysis.</CardDescription>
+        <CardDescription>Enter your details to see the live analysis.</CardDescription>
       </CardHeader>
       <Form {...form}>
-        <form onSubmit={onSubmit}>
+        <form>
           <CardContent>
-            <Accordion type="multiple" className="w-full" defaultValue={['personal', 'housing', 'assumptions', 'projections']}>
+            <Accordion type="single" collapsible className="w-full" defaultValue={'personal'}>
                 <AccordionItem value="personal">
                     <AccordionTrigger>
                     <h3 className="text-lg font-medium text-primary">1. Personal &amp; Financials</h3>
@@ -352,11 +351,7 @@ export default function InputForm({ form, onSubmit, onClear }: InputFormProps) {
                 </AccordionItem>
             </Accordion>
           </CardContent>
-          <CardFooter className="flex-col items-stretch gap-4">
-            <Button type="submit" size="lg" className="w-full">
-              <Calculator className="mr-2 h-5 w-5" />
-              Analyze
-            </Button>
+          <CardFooter>
             <Button variant="ghost" size="sm" onClick={onClear} className="text-muted-foreground self-center">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Clear Form
