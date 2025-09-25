@@ -2,7 +2,7 @@
 "use client"
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts"
-import { ChartContainer, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 import { formatCurrency } from "@/lib/utils"
 
 const chartConfig = {
@@ -46,7 +46,9 @@ interface CostComparisonChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0];
-      const { name, value } = data;
+      const { dataKey, value } = data; // Changed from 'name' to 'dataKey'
+      const name = dataKey as keyof typeof chartConfig;
+
       let description = '';
 
       switch(name) {
@@ -58,25 +60,30 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         default: description = 'A component of your housing cost.';
       }
       
-      const buyingStackId = data.payload.stackId;
-      const totalBuyingCost = payload.reduce((acc: number, entry: any) => {
+      const isBuyingSegment = data.payload.stackId === 'buy';
+      
+      const totalBuyingCost = isBuyingSegment ? payload.reduce((acc: number, entry: any) => {
         if(entry.payload.stackId === 'buy') {
-            return acc + entry.value;
+            return acc + (entry.value || 0);
         }
         return acc;
-      }, 0);
-      const taxBenefit = data.payload.taxBenefit;
+      }, 0) : 0;
+      
+      // We need to calculate total from original data, not from whatever is in the tooltip payload
+      const fullPayload = payload[0].payload;
+      const totalBuyingGross = fullPayload.principal + fullPayload.interest + fullPayload.maintenance + fullPayload.ewf;
+      const taxBenefit = fullPayload.taxBenefit;
 
 
       return (
         <div className="p-3 bg-card border rounded-lg shadow-lg max-w-xs">
-          <p className="font-bold text-base mb-1">{chartConfig[name as keyof typeof chartConfig]?.label}: {formatCurrency(value)}</p>
+          <p className="font-bold text-base mb-1">{chartConfig[name]?.label}: {formatCurrency(value)}</p>
           <p className="text-sm text-muted-foreground mb-2">{description}</p>
-          {buyingStackId === 'buy' && (
+          {isBuyingSegment && (
              <div className="border-t pt-2 mt-2">
                 <p className="text-xs">
-                    The total gross monthly buying cost is <span className="font-bold">{formatCurrency(totalBuyingCost)}</span>.
-                    After a tax benefit of <span className="font-bold text-green-600">-{formatCurrency(taxBenefit)}</span>, the net cost is <span className="font-bold">{formatCurrency(totalBuyingCost - taxBenefit)}</span>.
+                    The total gross monthly buying cost is <span className="font-bold">{formatCurrency(totalBuyingGross)}</span>.
+                    After a tax benefit of <span className="font-bold text-green-600">-{formatCurrency(taxBenefit)}</span>, the net cost is <span className="font-bold">{formatCurrency(totalBuyingGross - taxBenefit)}</span>.
                 </p>
              </div>
           )}
