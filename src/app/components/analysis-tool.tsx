@@ -116,7 +116,7 @@ export default function AnalysisTool() {
       });
     });
     return () => subscription.unsubscribe();
-  }, [form, handleValidationAndSubmit, handleValidationErrors]);
+  }, [form, handleValidationAndSubmit]);
 
 
   const handleClearForm = useCallback(() => {
@@ -125,8 +125,6 @@ export default function AnalysisTool() {
       form.reset(initialDefaultValues);
       setResults(null);
       setFormErrors(null); // Explicitly clear errors
-      // Re-run with defaults to show the initial state, but not old user data
-      handleValidationAndSubmit(initialDefaultValues);
       toast({
         title: "Form Cleared",
         description: "Your inputs have been reset to the default values.",
@@ -139,7 +137,7 @@ export default function AnalysisTool() {
         description: "There was an issue clearing the form data."
       });
     }
-  }, [form, toast, handleValidationAndSubmit]);
+  }, [form, toast]);
 
   if (!isClient) {
     return null; // or a loading spinner
