@@ -48,7 +48,6 @@ export default function AnalysisTool() {
   const form = useForm<AnalysisFormValues>({
     resolver: zodResolver(analysisSchema),
     mode: 'onChange',
-    defaultValues: initialDefaultValues,
   });
   
   const handleValidationAndSubmit = useCallback((data: AnalysisFormValues) => {
@@ -76,6 +75,7 @@ export default function AnalysisTool() {
   // Effect to load from localStorage ONLY on initial mount
   useEffect(() => {
     setIsClient(true);
+    let initialData = initialDefaultValues;
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
@@ -83,37 +83,28 @@ export default function AnalysisTool() {
         // Validate and set form values
         const validatedData = analysisSchema.safeParse(parsedData);
         if (validatedData.success) {
-            form.reset(validatedData.data);
-            handleValidationAndSubmit(validatedData.data);
-        } else {
-             // If stored data is invalid, start fresh
-             form.reset(initialDefaultValues);
-             handleValidationAndSubmit(initialDefaultValues);
+            initialData = validatedData.data;
         }
-      } else {
-          // If no data, run with defaults
-          handleValidationAndSubmit(form.getValues());
       }
     } catch (error) {
       console.error("Failed to read from localStorage", error);
-      // Fallback to defaults if local storage is corrupt
-      handleValidationAndSubmit(initialDefaultValues);
     }
+    form.reset(initialData);
+    handleValidationAndSubmit(initialData);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array ensures this runs only once.
 
 
   // Effect to watch for changes and update results/localStorage
   useEffect(() => {
-    const subscription = form.watch((values) => {
-      form.trigger().then(isValid => {
-        if (isValid) {
-          // The `values` from watch can sometimes be partial, so we get the full, validated values.
-          handleValidationAndSubmit(form.getValues());
-        } else {
-          handleValidationErrors(form.formState.errors);
-        }
-      });
+    const subscription = form.watch(() => {
+        form.trigger().then(isValid => {
+            if (isValid) {
+                handleValidationAndSubmit(form.getValues());
+            } else {
+                handleValidationErrors(form.formState.errors);
+            }
+        });
     });
     return () => subscription.unsubscribe();
   }, [form, handleValidationAndSubmit]);
@@ -122,12 +113,12 @@ export default function AnalysisTool() {
   const handleClearForm = useCallback(() => {
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
-      form.reset(initialDefaultValues);
+      form.reset({}); // Reset to a blank state, not defaults
       setResults(null);
-      setFormErrors(null); // Explicitly clear errors
+      setFormErrors(form.formState.errors); // Show validation errors for empty required fields
       toast({
         title: "Form Cleared",
-        description: "Your inputs have been reset to the default values.",
+        description: "Your inputs have been cleared.",
       });
     } catch (error) {
       console.error("Failed to clear localStorage", error);
