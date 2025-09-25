@@ -78,7 +78,7 @@ export default function InputForm({ form, onClear }: InputFormProps) {
             <Accordion type="single" collapsible className="w-full" defaultValue={'personal'}>
                 <AccordionItem value="personal">
                     <AccordionTrigger>
-                    <h3 className="text-lg font-medium text-primary">1. Personal &amp; Financials</h3>
+                    <h3 className="text-lg font-medium text-primary">1. Personal & Financials</h3>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -136,7 +136,7 @@ export default function InputForm({ form, onClear }: InputFormProps) {
                 </AccordionItem>
                 <AccordionItem value="housing">
                     <AccordionTrigger>
-                        <h3 className="text-lg font-medium text-primary">2. Housing &amp; Mortgage</h3>
+                        <h3 className="text-lg font-medium text-primary">2. Housing & Mortgage</h3>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -181,7 +181,7 @@ export default function InputForm({ form, onClear }: InputFormProps) {
                 </AccordionItem>
                 <AccordionItem value="assumptions">
                     <AccordionTrigger>
-                    <h3 className="text-lg font-medium text-primary">3. Advanced: Costs &amp; Taxes</h3>
+                    <h3 className="text-lg font-medium text-primary">3. Advanced: Costs & Taxes</h3>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4">
                     <div className="space-y-6">
