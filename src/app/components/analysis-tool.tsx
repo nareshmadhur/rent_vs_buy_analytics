@@ -24,69 +24,52 @@ export default function AnalysisTool() {
 
   const form = useForm<AnalysisFormValues>({
     resolver: zodResolver(analysisSchema),
-    mode: 'onChange', // Validate on every change
+    mode: 'onChange',
   });
 
-  // Effect for initial load from localStorage. Runs ONLY ONCE.
   useEffect(() => {
     setIsClient(true);
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        // Use safeParse to avoid throwing errors on invalid stored data
         const validation = analysisSchema.safeParse(parsedData);
         if (validation.success) {
-          form.reset(validation.data); // Set the form with saved data
+          form.reset(validation.data);
         } else {
-          // If data in localStorage is invalid, start fresh
           localStorage.removeItem(LOCAL_STORAGE_KEY);
         }
       }
     } catch (error) {
-      console.error("Failed to read or parse from localStorage", error);
-      // Ensure a clean state if localStorage is corrupted
+      console.error("Failed to read from localStorage", error);
       localStorage.removeItem(LOCAL_STORAGE_KEY);
     }
   }, [form]);
 
-
-  // Effect for watching form changes, validating, and performing calculations.
   useEffect(() => {
-    // This subscription is active only on the client
     if (!isClient) return;
 
     const subscription = form.watch((values) => {
-      // Attempt to validate the current form values
       const validation = analysisSchema.safeParse(values);
 
       if (validation.success) {
-        // If validation succeeds:
-        // 1. Perform calculations and update results
-        const newResults = performCalculations(validation.data);
-        setResults(newResults);
-        // 2. Clear any previous form errors
+        setResults(performCalculations(validation.data));
         setFormErrors(null);
-        // 3. Save the valid data to localStorage
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(validation.data));
       } else {
-        // If validation fails:
-        // 1. Clear the results to show the "Awaiting Analysis" pane
         setResults(null);
-        // 2. Set the form errors to display what's missing
         setFormErrors(validation.error.formErrors.fieldErrors);
-        // 3. Optional: Remove invalid data from localStorage to prevent reloading bad state
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        // Do not remove from local storage on validation error during typing
+        // to allow fixing inputs without losing all data.
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [form, isClient]); // Re-run if form instance or isClient changes
+  }, [form, isClient]);
 
-  // Function to clear the form
   const handleClearForm = useCallback(() => {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
-    form.reset({}); // Reset to a completely empty state
+    form.reset({});
     setResults(null);
     setFormErrors(null);
     toast({
@@ -95,9 +78,7 @@ export default function AnalysisTool() {
     });
   }, [form, toast]);
 
-
   if (!isClient) {
-    // Render nothing on the server to avoid hydration mismatches
     return null;
   }
 
