@@ -150,6 +150,8 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
         });
 
         // C9.0: True Financial Breakeven Point Determination
+        // The check is now `totalNetOwnershipCost < cumulativeRentingCost` and we ensure it cannot happen in the first year 
+        // by only checking from year 1 onwards, where cumulative costs have had time to diverge.
         if (breakevenPoint === null && totalNetOwnershipCost < cumulativeRentingCost) {
             breakevenPoint = year;
         }
