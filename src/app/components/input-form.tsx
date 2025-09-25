@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect } from 'react';
@@ -18,6 +19,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 interface InputFormProps {
   form: UseFormReturn<AnalysisFormValues>;
   onClear: () => void;
+  formKey: number;
 }
 
 const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }) => (
@@ -36,7 +38,7 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
     </div>
   );
 
-export default function InputForm({ form, onClear }: InputFormProps) {
+export default function InputForm({ form, onClear, formKey }: InputFormProps) {
 
   const isFirstTimeBuyer = useWatch({
     control: form.control,
@@ -75,7 +77,7 @@ export default function InputForm({ form, onClear }: InputFormProps) {
         <CardDescription>Enter your details to see the live analysis.</CardDescription>
       </CardHeader>
       <Form {...form}>
-        <form onSubmit={(e) => e.preventDefault()}>
+        <form key={formKey} onSubmit={(e) => e.preventDefault()}>
           <CardContent>
             <Accordion type="single" collapsible className="w-full" defaultValue={'personal'}>
                 <AccordionItem value="personal">

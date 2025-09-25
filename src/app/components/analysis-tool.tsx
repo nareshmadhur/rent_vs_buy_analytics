@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { AnalysisFormValues } from '@/lib/schema';
@@ -43,6 +43,7 @@ export default function AnalysisTool() {
   const [formErrors, setFormErrors] = useState<FieldErrors<AnalysisFormValues> | null>(null);
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
+  const [formKey, setFormKey] = useState(Date.now());
 
   const form = useForm<AnalysisFormValues>({
     resolver: zodResolver(analysisSchema),
@@ -57,11 +58,13 @@ export default function AnalysisTool() {
       let dataToLoad: AnalysisFormValues;
       if (savedData) {
         const parsedData = JSON.parse(savedData);
+        // Ensure saved data is valid before using it
         const validation = analysisSchema.safeParse(parsedData);
         if (validation.success) {
           dataToLoad = validation.data;
         } else {
-          // Saved data is invalid, use defaults
+          // If saved data is invalid, use defaults
+          console.warn("Invalid data in localStorage, using defaults.");
           dataToLoad = initialDefaultValues;
         }
       } else {
@@ -82,7 +85,6 @@ export default function AnalysisTool() {
   // Effect for watching changes and re-calculating/saving
   useEffect(() => {
     const subscription = form.watch((values, { name, type }) => {
-      // Don't do anything if not a client yet
       if (!isClient) return;
 
       const validation = analysisSchema.safeParse(values);
@@ -103,6 +105,7 @@ export default function AnalysisTool() {
     form.reset({});
     setResults(null);
     setFormErrors(null);
+    setFormKey(Date.now()); // Change the key to force re-mount
     toast({
       title: "Form Cleared",
       description: "Your inputs have been cleared.",
@@ -123,7 +126,7 @@ export default function AnalysisTool() {
       <main className="flex-grow container mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
-            <InputForm form={form} onClear={handleClearForm} />
+            <InputForm form={form} onClear={handleClearForm} formKey={formKey} />
           </div>
           <div className="lg:col-span-3">
             <ResultsDisplay results={results} errors={formErrors} />
