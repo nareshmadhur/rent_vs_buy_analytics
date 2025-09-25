@@ -75,27 +75,28 @@ export default function AnalysisTool() {
 
   useEffect(() => {
     setIsClient(true);
-    let initialData = initialDefaultValues;
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         const validatedData = analysisSchema.safeParse(parsedData);
         if (validatedData.success) {
-            initialData = validatedData.data;
+          form.reset(validatedData.data);
+        } else {
+          form.reset(initialDefaultValues);
         }
+      } else {
+        form.reset(initialDefaultValues);
       }
     } catch (error) {
-      console.error("Failed to read from localStorage", error);
+      console.error("Failed to read from localStorage, using defaults", error);
+      form.reset(initialDefaultValues);
     }
-    form.reset(initialData);
-    handleValidationAndSubmit(initialData);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [form]);
 
 
   useEffect(() => {
-    const subscription = form.watch(() => {
+    const subscription = form.watch((value, { name, type }) => {
       if (isResettingRef.current) {
         return;
       }
@@ -111,16 +112,17 @@ export default function AnalysisTool() {
   }, [form, handleValidationAndSubmit]);
 
   useEffect(() => {
-    if (isResettingRef.current && !form.formState.isDirty) {
-      isResettingRef.current = false;
+    // This effect helps to reset the ref after a reset action is complete.
+    if (form.formState.isDirty && isResettingRef.current) {
+        isResettingRef.current = false;
     }
   }, [form.formState.isDirty]);
 
 
   const handleClearForm = useCallback(() => {
     try {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
       isResettingRef.current = true;
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
       form.reset({}); 
       setResults(null);
       setFormErrors({});
@@ -128,6 +130,7 @@ export default function AnalysisTool() {
         title: "Form Cleared",
         description: "Your inputs have been cleared.",
       });
+       // Use a timeout to reset the flag after the current event loop
       setTimeout(() => {
         isResettingRef.current = false;
       }, 0);
