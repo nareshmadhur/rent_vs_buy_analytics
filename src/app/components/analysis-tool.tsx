@@ -16,68 +16,36 @@ import type { FieldErrors } from 'react-hook-form';
 
 const LOCAL_STORAGE_KEY = 'mortgageAnalysisData';
 
-const initialDefaultValues: AnalysisFormValues = {
-  age: 30,
-  annualIncome: 60000,
-  employmentStatus: 'employed',
-  savings: 25000,
-  currentRentalExpenses: 1500,
-  maxMortgage: 300000,
-  overbidAmount: 20000,
-  interestRate: 4.1,
-  propertyTransferTaxPercentage: 2,
-  otherUpfrontCostsPercentage: 3,
-  maintenancePercentage: 1,
-  isFirstTimeBuyer: false,
-  marginalTaxRate: 37,
-  midEligible: true,
-  intendedLengthOfStay: 10,
-  propertyAppreciationRate: 2,
-  isEligibleForHuurtoeslag: false,
-  householdSize: 'single',
-  estimatedSellingCostsPercentage: 2,
-};
-
 export default function AnalysisTool() {
   const [results, setResults] = useState<CalculationOutput | null>(null);
   const [formErrors, setFormErrors] = useState<FieldErrors<AnalysisFormValues> | null>(null);
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
-  const [formKey, setFormKey] = useState(Date.now());
 
   const form = useForm<AnalysisFormValues>({
     resolver: zodResolver(analysisSchema),
-    mode: 'onChange', // Validate on change to give instant feedback
+    mode: 'onChange',
   });
 
-  // Effect for initial load from localStorage or defaults
+  // Effect for initial load from localStorage
   useEffect(() => {
     setIsClient(true);
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-      let dataToLoad: AnalysisFormValues;
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        // Ensure saved data is valid before using it
         const validation = analysisSchema.safeParse(parsedData);
         if (validation.success) {
-          dataToLoad = validation.data;
+          form.reset(validation.data);
+          setResults(performCalculations(validation.data));
         } else {
-          // If saved data is invalid, use defaults
-          console.warn("Invalid data in localStorage, using defaults.");
-          dataToLoad = initialDefaultValues;
+          // If saved data is invalid, start fresh
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
         }
-      } else {
-        // No saved data, use defaults
-        dataToLoad = initialDefaultValues;
       }
-      form.reset(dataToLoad);
-      setResults(performCalculations(dataToLoad));
-
     } catch (error) {
-      console.error("Failed to read from localStorage, using defaults", error);
-      form.reset(initialDefaultValues);
-      setResults(performCalculations(initialDefaultValues));
+      console.error("Failed to read from localStorage", error);
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
     }
   }, [form]);
 
@@ -105,7 +73,6 @@ export default function AnalysisTool() {
     form.reset({});
     setResults(null);
     setFormErrors(null);
-    setFormKey(Date.now()); // Change the key to force re-mount
     toast({
       title: "Form Cleared",
       description: "Your inputs have been cleared.",
@@ -126,7 +93,7 @@ export default function AnalysisTool() {
       <main className="flex-grow container mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
-            <InputForm form={form} onClear={handleClearForm} formKey={formKey} />
+            <InputForm form={form} onClear={handleClearForm} />
           </div>
           <div className="lg:col-span-3">
             <ResultsDisplay results={results} errors={formErrors} />
