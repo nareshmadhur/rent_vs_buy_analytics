@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { AnalysisFormValues } from '@/lib/schema';
@@ -34,19 +34,26 @@ const initialDefaultValues: AnalysisFormValues = {
 export default function AnalysisTool() {
   const [results, setResults] = useState<CalculationOutput | null>(null);
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const form = useForm<AnalysisFormValues>({
     resolver: zodResolver(analysisSchema),
     mode: 'onChange',
+    defaultValues: initialDefaultValues,
   });
 
   useEffect(() => {
+    if (!isClient) return;
+
     let initialData = initialDefaultValues;
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        // Validate saved data before merging
         const validation = analysisSchema.partial().safeParse(parsedData);
         if (validation.success) {
           initialData = { ...initialDefaultValues, ...validation.data };
@@ -56,7 +63,7 @@ export default function AnalysisTool() {
       console.error("Failed to read from localStorage", error);
     }
     form.reset(initialData);
-  }, [form]); // Only run once on mount
+  }, [form, isClient]); 
 
   const handleClearForm = useCallback(() => {
     try {
