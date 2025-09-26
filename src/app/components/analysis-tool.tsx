@@ -47,7 +47,7 @@ export default function AnalysisTool() {
 
   const form = useForm<AnalysisFormValues>({
     resolver: zodResolver(analysisSchema),
-    mode: 'onChange',
+    mode: 'onChange', // Validate on change to get real-time feedback
   });
 
   // Effect to load data from localStorage on initial mount
@@ -57,9 +57,10 @@ export default function AnalysisTool() {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
+        // Use zod to safely parse and validate the saved data
         const validation = analysisSchema.safeParse(parsedData);
         if (validation.success) {
-          form.reset(validation.data); // Load valid saved data
+          form.reset(validation.data); // Load valid saved data into the form
         } else {
           // If saved data is invalid, remove it
           localStorage.removeItem(LOCAL_STORAGE_KEY);
@@ -67,36 +68,63 @@ export default function AnalysisTool() {
       }
     } catch (error) {
       console.error("Failed to read from localStorage", error);
+      // Ensure bad data is removed if parsing fails
       localStorage.removeItem(LOCAL_STORAGE_KEY);
     }
-  }, [form]);
+  }, [form]); // form.reset is stable, so this runs once on mount
 
-  // Effect to watch for changes and perform calculations
+  // Effect to watch for form changes, validate, and perform calculations
   useEffect(() => {
+    // Don't run on the server
     if (!isClient) return;
 
+    // Subscribe to form changes
     const subscription = form.watch((values) => {
+      // Attempt to validate the form with the current values
       const validation = analysisSchema.safeParse(values);
 
       if (validation.success) {
-        // If form is valid, calculate results and save to localStorage
+        // If the form is valid, perform calculations and update state
         setResults(performCalculations(validation.data));
-        setFormErrors(null);
+        setFormErrors(null); // Clear any previous errors
+        // Save the valid data to localStorage
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(validation.data));
       } else {
-        // If form is invalid, clear results and show errors
+        // If the form is invalid, clear the results and store the errors
         setResults(null);
         setFormErrors(validation.error.formErrors.fieldErrors);
       }
     });
 
+    // Cleanup the subscription when the component unmounts
     return () => subscription.unsubscribe();
-  }, [form, isClient]);
+  }, [form, isClient]); // Re-run if form instance or client status changes
 
 
   const handleClearForm = useCallback(() => {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
-    form.reset({}); 
+    form.reset({
+        // Reset with undefined for zod coercion to work correctly
+        age: undefined,
+        annualIncome: undefined,
+        employmentStatus: undefined,
+        savings: undefined,
+        currentRentalExpenses: undefined,
+        maxMortgage: undefined,
+        overbidAmount: undefined,
+        interestRate: undefined,
+        propertyTransferTaxPercentage: undefined,
+        otherUpfrontCostsPercentage: undefined,
+        maintenancePercentage: undefined,
+        isFirstTimeBuyer: false,
+        marginalTaxRate: undefined,
+        midEligible: true,
+        intendedLengthOfStay: undefined,
+        propertyAppreciationRate: undefined,
+        estimatedSellingCostsPercentage: undefined,
+        isEligibleForHuurtoeslag: false,
+        householdSize: undefined,
+    }); 
     setResults(null);
     setFormErrors(null);
     toast({
