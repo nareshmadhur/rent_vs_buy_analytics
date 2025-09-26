@@ -16,6 +16,29 @@ import type { FieldErrors } from 'react-hook-form';
 
 const LOCAL_STORAGE_KEY = 'mortgageAnalysisData';
 
+const exampleData: AnalysisFormValues = {
+  age: 30,
+  annualIncome: 65000,
+  employmentStatus: 'employed',
+  savings: 30000,
+  currentRentalExpenses: 1600,
+  maxMortgage: 350000,
+  overbidAmount: 25000,
+  interestRate: 4.2,
+  propertyTransferTaxPercentage: 0,
+  otherUpfrontCostsPercentage: 3,
+  maintenancePercentage: 1,
+  isFirstTimeBuyer: true,
+  marginalTaxRate: 37,
+  midEligible: true,
+  intendedLengthOfStay: 10,
+  propertyAppreciationRate: 2.5,
+  estimatedSellingCostsPercentage: 2,
+  isEligibleForHuurtoeslag: false,
+  householdSize: 'single',
+};
+
+
 export default function AnalysisTool() {
   const [results, setResults] = useState<CalculationOutput | null>(null);
   const [formErrors, setFormErrors] = useState<FieldErrors<AnalysisFormValues> | null>(null);
@@ -37,19 +60,14 @@ export default function AnalysisTool() {
         const validation = analysisSchema.safeParse(parsedData);
         if (validation.success) {
           form.reset(validation.data); // Load valid saved data
-          setResults(performCalculations(validation.data)); // Calculate on load
         } else {
-          // If saved data is invalid, remove it and start fresh
+          // If saved data is invalid, remove it
           localStorage.removeItem(LOCAL_STORAGE_KEY);
-          form.reset({}); // Reset to empty
         }
-      } else {
-        form.reset({}); // No saved data, start empty
       }
     } catch (error) {
       console.error("Failed to read from localStorage", error);
       localStorage.removeItem(LOCAL_STORAGE_KEY);
-      form.reset({}); // Error, start empty
     }
   }, [form]);
 
@@ -69,7 +87,6 @@ export default function AnalysisTool() {
         // If form is invalid, clear results and show errors
         setResults(null);
         setFormErrors(validation.error.formErrors.fieldErrors);
-        // Do not save invalid data to localStorage
       }
     });
 
@@ -79,7 +96,7 @@ export default function AnalysisTool() {
 
   const handleClearForm = useCallback(() => {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
-    form.reset({}); // Reset to a completely empty object
+    form.reset({}); 
     setResults(null);
     setFormErrors(null);
     toast({
@@ -88,8 +105,16 @@ export default function AnalysisTool() {
     });
   }, [form, toast]);
 
+  const handleLoadExample = useCallback(() => {
+    form.reset(exampleData);
+    toast({
+        title: "Example Loaded",
+        description: "A sample scenario has been loaded into the form.",
+    });
+  }, [form, toast]);
+
   if (!isClient) {
-    // Render nothing on the server to avoid hydration mismatch
+    // Render a placeholder or nothing on the server to avoid hydration mismatch
     return null;
   }
 
@@ -102,7 +127,7 @@ export default function AnalysisTool() {
       <main className="flex-grow container mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
-            <InputForm form={form} onClear={handleClearForm} />
+            <InputForm form={form} onClear={handleClearForm} onLoadExample={handleLoadExample} />
           </div>
           <div className="lg:col-span-3">
             <ResultsDisplay results={results} errors={formErrors} />

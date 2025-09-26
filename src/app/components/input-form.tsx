@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info, Euro, Percent, Trash2, CalendarClock, TrendingUp, Handshake } from 'lucide-react';
+import { Info, Euro, Percent, Trash2, CalendarClock, TrendingUp, Handshake, Lightbulb } from 'lucide-react';
 import type { AnalysisFormValues } from '@/lib/schema';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 interface InputFormProps {
   form: UseFormReturn<AnalysisFormValues>;
   onClear: () => void;
+  onLoadExample: () => void;
 }
 
 const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }) => (
@@ -37,7 +38,7 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
     </div>
   );
 
-export default function InputForm({ form, onClear }: InputFormProps) {
+export default function InputForm({ form, onClear, onLoadExample }: InputFormProps) {
 
   const isFirstTimeBuyer = useWatch({
     control: form.control,
@@ -354,8 +355,12 @@ export default function InputForm({ form, onClear }: InputFormProps) {
                 </AccordionItem>
             </Accordion>
           </CardContent>
-          <CardFooter>
-            <Button variant="ghost" size="sm" onClick={onClear} className="text-muted-foreground self-center">
+          <CardFooter className="flex justify-between">
+            <Button variant="ghost" size="sm" onClick={onLoadExample} className="text-muted-foreground">
+                <Lightbulb className="mr-2 h-4 w-4" />
+                Load Example
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onClear} className="text-muted-foreground">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Clear Form
             </Button>
@@ -365,5 +370,3 @@ export default function InputForm({ form, onClear }: InputFormProps) {
     </Card>
   );
 }
-
-    
