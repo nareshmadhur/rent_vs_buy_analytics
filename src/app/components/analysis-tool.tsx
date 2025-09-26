@@ -37,6 +37,7 @@ export default function AnalysisTool() {
         const validation = analysisSchema.safeParse(parsedData);
         if (validation.success) {
           form.reset(validation.data); // Load valid saved data
+          setResults(performCalculations(validation.data)); // Calculate on load
         } else {
           // If saved data is invalid, remove it and start fresh
           localStorage.removeItem(LOCAL_STORAGE_KEY);
