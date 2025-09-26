@@ -1,20 +1,15 @@
 
 "use client";
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import type { AnalysisFormValues } from '@/lib/schema';
 import { analysisSchema } from '@/lib/schema';
 import { performCalculations, type CalculationOutput } from '@/lib/calculations';
 import InputForm from './input-form';
 import ResultsDisplay from './results-display';
-import { Card, CardContent } from '@/components/ui/card';
-import { AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { FieldErrors } from 'react-hook-form';
-
-const LOCAL_STORAGE_KEY = 'mortgageAnalysisData';
 
 const exampleData: AnalysisFormValues = {
   age: 30,
@@ -41,70 +36,29 @@ const exampleData: AnalysisFormValues = {
 
 export default function AnalysisTool() {
   const [results, setResults] = useState<CalculationOutput | null>(null);
-  const [formErrors, setFormErrors] = useState<FieldErrors<AnalysisFormValues> | null>(null);
   const { toast } = useToast();
-  const [isClient, setIsClient] = useState(false);
 
-  const form = useForm<AnalysisFormValues>({
-    resolver: zodResolver(analysisSchema),
-    mode: 'onChange', // Validate on change to get real-time feedback
-  });
+  const form = useForm<AnalysisFormValues>();
 
-  // Effect to load data from localStorage on initial mount
-  useEffect(() => {
-    setIsClient(true);
-    try {
-      const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        // Use zod to safely parse and validate the saved data
-        const validation = analysisSchema.safeParse(parsedData);
-        if (validation.success) {
-          form.reset(validation.data); // Load valid saved data into the form
-        } else {
-          // If saved data is invalid, remove it
-          localStorage.removeItem(LOCAL_STORAGE_KEY);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to read from localStorage", error);
-      // Ensure bad data is removed if parsing fails
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
+  const onSubmit = (data: AnalysisFormValues) => {
+    // Manually validate with zod before calculating
+    const validation = analysisSchema.safeParse(data);
+    if (validation.success) {
+      setResults(performCalculations(validation.data));
+    } else {
+      setResults(null);
+      // Optional: Show a toast or log errors
+      toast({
+        variant: "destructive",
+        title: "Invalid data",
+        description: "Please check the form fields and try again.",
+      });
+      console.error(validation.error.flatten().fieldErrors);
     }
-  }, [form]); // form.reset is stable, so this runs once on mount
-
-  // Effect to watch for form changes, validate, and perform calculations
-  useEffect(() => {
-    // Don't run on the server
-    if (!isClient) return;
-
-    // Subscribe to form changes
-    const subscription = form.watch((values) => {
-      // Attempt to validate the form with the current values
-      const validation = analysisSchema.safeParse(values);
-
-      if (validation.success) {
-        // If the form is valid, perform calculations and update state
-        setResults(performCalculations(validation.data));
-        setFormErrors(null); // Clear any previous errors
-        // Save the valid data to localStorage
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(validation.data));
-      } else {
-        // If the form is invalid, clear the results and store the errors
-        setResults(null);
-        setFormErrors(validation.error.formErrors.fieldErrors);
-      }
-    });
-
-    // Cleanup the subscription when the component unmounts
-    return () => subscription.unsubscribe();
-  }, [form, isClient]); // Re-run if form instance or client status changes
-
+  };
 
   const handleClearForm = useCallback(() => {
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
     form.reset({
-        // Reset with undefined for zod coercion to work correctly
         age: undefined,
         annualIncome: undefined,
         employmentStatus: undefined,
@@ -126,7 +80,6 @@ export default function AnalysisTool() {
         householdSize: undefined,
     }); 
     setResults(null);
-    setFormErrors(null);
     toast({
       title: "Form Cleared",
       description: "Your inputs have been cleared.",
@@ -141,11 +94,6 @@ export default function AnalysisTool() {
     });
   }, [form, toast]);
 
-  if (!isClient) {
-    // Render a placeholder or nothing on the server to avoid hydration mismatch
-    return null;
-  }
-
   return (
     <div className="flex flex-col min-h-screen">
       <header className="p-6 border-b">
@@ -155,25 +103,15 @@ export default function AnalysisTool() {
       <main className="flex-grow container mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
-            <InputForm form={form} onClear={handleClearForm} onLoadExample={handleLoadExample} />
+            <InputForm form={form} onClear={handleClearForm} onLoadExample={handleLoadExample} onSubmit={form.handleSubmit(onSubmit)} />
           </div>
           <div className="lg:col-span-3">
-            <ResultsDisplay results={results} errors={formErrors} />
+            <ResultsDisplay results={results} errors={null} />
           </div>
         </div>
       </main>
-      <footer className="mt-8">
-        <Card className="rounded-none border-t-4 border-accent bg-secondary">
-          <CardContent className="p-4 flex items-center gap-4">
-            <AlertTriangle className="w-8 h-8 text-accent-foreground" />
-            <div>
-              <h3 className="font-bold text-accent-foreground">Disclaimer: Estimation Only</h3>
-              <p className="text-sm text-muted-foreground">
-                These results are estimations based on the data provided and common tax rules. This is an analysis for comparison, not financial advice. Consult with a certified financial advisor.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      <footer className="mt-8 py-4 text-center text-sm text-muted-foreground">
+        Disclaimer: This is an analysis for comparison, not financial advice. Consult with a certified financial advisor.
       </footer>
     </div>
   );

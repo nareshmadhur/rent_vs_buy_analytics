@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info, Euro, Percent, Trash2, CalendarClock, TrendingUp, Handshake, Lightbulb } from 'lucide-react';
+import { Info, Euro, Percent, Trash2, CalendarClock, TrendingUp, Handshake, Lightbulb, Calculator } from 'lucide-react';
 import type { AnalysisFormValues } from '@/lib/schema';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,7 @@ interface InputFormProps {
   form: UseFormReturn<AnalysisFormValues>;
   onClear: () => void;
   onLoadExample: () => void;
+  onSubmit: (e: React.FormEvent) => void;
 }
 
 const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }) => (
@@ -38,25 +39,26 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
     </div>
   );
 
-export default function InputForm({ form, onClear, onLoadExample }: InputFormProps) {
+export default function InputForm({ form, onClear, onLoadExample, onSubmit }: InputFormProps) {
 
   const isFirstTimeBuyer = useWatch({
     control: form.control,
     name: 'isFirstTimeBuyer',
+    defaultValue: false
   });
 
   const isEligibleForHuurtoeslag = useWatch({
     control: form.control,
-    name: 'isEligibleForHuurtoeslag'
+    name: 'isEligibleForHuurtoeslag',
+    defaultValue: false
   });
 
   useEffect(() => {
     if (isFirstTimeBuyer) {
-      form.setValue('propertyTransferTaxPercentage', 0, { shouldValidate: true });
+      form.setValue('propertyTransferTaxPercentage', 0);
     } else {
-      // Only set to 2 if the value is currently 0 from the switch
       if (form.getValues('propertyTransferTaxPercentage') === 0) {
-        form.setValue('propertyTransferTaxPercentage', 2, { shouldValidate: true });
+        form.setValue('propertyTransferTaxPercentage', 2);
       }
     }
   }, [isFirstTimeBuyer, form]);
@@ -77,7 +79,7 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
         <CardDescription>Enter your details to see the live analysis.</CardDescription>
       </CardHeader>
       <Form {...form}>
-        <form onSubmit={(e) => e.preventDefault()}>
+        <form onSubmit={onSubmit}>
           <CardContent>
             <Accordion type="single" collapsible className="w-full" defaultValue={'personal'}>
                 <AccordionItem value="personal">
@@ -92,7 +94,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                 <FormControl>
                                 <Input type="number" placeholder="e.g., 30" {...field} onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
-                                <FormMessage />
                             </FormItem>
                             )} />
                             <FormField control={form.control} name="employmentStatus" render={({ field }) => (
@@ -108,7 +109,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                     <SelectItem value="other">Other</SelectItem>
                                 </SelectContent>
                                 </Select>
-                                <FormMessage />
                             </FormItem>
                             )} />
                             <FormField control={form.control} name="annualIncome" render={({ field }) => (
@@ -120,7 +120,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                     <Input type="number" placeholder="e.g., 60000" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
-                                <FormMessage />
                             </FormItem>
                             )} />
                             <FormField control={form.control} name="savings" render={({ field }) => (
@@ -132,7 +131,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                     <Input type="number" placeholder="e.g., 25000" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
-                                <FormMessage />
                             </FormItem>
                             )} />
                         </div>
@@ -153,7 +151,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                     <Input type="number" placeholder="e.g., 1500" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
-                                <FormMessage />
                             </FormItem>
                             )} />
                              <FormField control={form.control} name="maxMortgage" render={({ field }) => (
@@ -165,7 +162,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                     <Input type="number" placeholder="e.g., 300000" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
-                                <FormMessage />
                             </FormItem>
                             )} />
                              <FormField control={form.control} name="overbidAmount" render={({ field }) => (
@@ -177,7 +173,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                     <Input type="number" placeholder="e.g., 20000" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
-                                <FormMessage />
                             </FormItem>
                             )} />
                         </div>
@@ -199,7 +194,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                 <Input type="number" step="0.01" placeholder="e.g., 4.1" {...field} className="pr-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                             </div>
-                            <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="marginalTaxRate" render={({ field }) => (
@@ -211,7 +205,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                 <Input type="number" step="0.1" placeholder="e.g., 37" {...field} className="pr-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                             </div>
-                            <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="propertyTransferTaxPercentage" render={({ field }) => (
@@ -223,7 +216,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                 <Input type="number" step="0.1" placeholder="e.g., 2" {...field} className="pr-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} disabled={isFirstTimeBuyer} />
                                 </FormControl>
                             </div>
-                            <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="otherUpfrontCostsPercentage" render={({ field }) => (
@@ -235,7 +227,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                 <Input type="number" step="0.1" placeholder="e.g., 3" {...field} className="pr-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                             </div>
-                            <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="maintenancePercentage" render={({ field }) => (
@@ -247,7 +238,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                 <Input type="number" step="0.1" placeholder="e.g., 1" {...field} className="pr-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                             </div>
-                            <FormMessage />
                             </FormItem>
                         )} />
                         </div>
@@ -292,7 +282,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                     <Input type="number" placeholder="e.g., 10" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
-                                <FormMessage />
                             </FormItem>
                             )} />
                             <FormField control={form.control} name="propertyAppreciationRate" render={({ field }) => (
@@ -304,7 +293,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                     <Input type="number" step="0.1" placeholder="e.g., 2.5" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
-                                <FormMessage />
                             </FormItem>
                             )} />
                             <FormField control={form.control} name="estimatedSellingCostsPercentage" render={({ field }) => (
@@ -316,7 +304,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                     <Input type="number" step="0.1" placeholder="e.g., 2" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
-                                <FormMessage />
                             </FormItem>
                             )} />
                         </div>
@@ -345,7 +332,6 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                                         <SelectItem value="couple">Couple / Fiscal Partner</SelectItem>
                                     </SelectContent>
                                     </Select>
-                                    <FormMessage />
                                 </FormItem>
                                 )} />
                             )}
@@ -355,15 +341,21 @@ export default function InputForm({ form, onClear, onLoadExample }: InputFormPro
                 </AccordionItem>
             </Accordion>
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="ghost" size="sm" onClick={onLoadExample} className="text-muted-foreground">
-                <Lightbulb className="mr-2 h-4 w-4" />
-                Load Example
+          <CardFooter className="flex flex-col gap-4 items-stretch">
+             <Button type="submit">
+                <Calculator className="mr-2 h-4 w-4" />
+                Calculate Analysis
             </Button>
-            <Button variant="ghost" size="sm" onClick={onClear} className="text-muted-foreground">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Clear Form
-            </Button>
+            <div className="flex justify-between">
+                <Button variant="ghost" size="sm" onClick={onLoadExample} className="text-muted-foreground">
+                    <Lightbulb className="mr-2 h-4 w-4" />
+                    Load Example
+                </Button>
+                <Button variant="ghost" size="sm" onClick={onClear} className="text-muted-foreground">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Clear Form
+                </Button>
+            </div>
           </CardFooter>
         </form>
       </Form>

@@ -61,7 +61,7 @@ const QualitativeFactors = () => (
 
 const VerdictCard = ({ results }: { results: CalculationOutput }) => {
     const { breakevenPoint, projection, realizedValueOnSale, totalNetMonthlyBuyingCost, netMonthlyRentalCost } = results;
-    const stayDuration = projection.length > 0 ? projection[projection.length - 1].year : 0;
+    const stayDuration = projection.length > 1 ? projection[projection.length - 1].year : 0;
     const doesBreakeven = breakevenPoint !== null && breakevenPoint <= stayDuration;
 
     const buyingIsCheaperMonthly = totalNetMonthlyBuyingCost < netMonthlyRentalCost;
@@ -110,44 +110,17 @@ const VerdictCard = ({ results }: { results: CalculationOutput }) => {
     );
 }
 
-// Map field names to human-readable labels
-const fieldLabels: { [key in keyof AnalysisFormValues]?: string } = {
-  age: "Age",
-  annualIncome: "Annual Income",
-  savings: "Savings",
-  currentRentalExpenses: "Current Monthly Rent",
-  maxMortgage: "Mortgage Amount",
-  overbidAmount: "Overbid Amount",
-  interestRate: "Interest Rate",
-  marginalTaxRate: "Marginal Tax Rate",
-  intendedLengthOfStay: "Length of Stay",
-  propertyAppreciationRate: "Appreciation Rate",
-  estimatedSellingCostsPercentage: "Est. Selling Costs",
-};
-
 export default function ResultsDisplay({ results, errors }: ResultsDisplayProps) {
   if (!results) {
-    const errorKeys = errors ? Object.keys(errors).filter(key => key in fieldLabels) : [];
     return (
       <Card className="flex flex-col items-center justify-center h-full min-h-[500px] bg-secondary/50 border-dashed">
         <CardHeader className="text-center">
           <ListChecks className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <CardTitle className="text-2xl">Awaiting Your Analysis</CardTitle>
           <CardDescription>
-            {errorKeys.length > 0 ? "Please complete the following fields:" : "Fill in the form to get started."}
+            Fill in the form and click "Calculate" to see your results.
           </CardDescription>
         </CardHeader>
-        {errorKeys.length > 0 && (
-            <CardContent className="w-full max-w-sm p-6">
-                <ul className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-muted-foreground">
-                    {errorKeys.map((key) => (
-                        <li key={key} className="truncate">
-                            - {fieldLabels[key as keyof AnalysisFormValues]}
-                        </li>
-                    ))}
-                </ul>
-            </CardContent>
-        )}
       </Card>
     );
   }
@@ -166,8 +139,8 @@ export default function ResultsDisplay({ results, errors }: ResultsDisplayProps)
     monthlyTaxBenefit,
   } = results;
 
-  const stayDuration = projection.length > 0 ? projection[projection.length - 1].year : 0;
-  const breakevenData = breakevenPoint ? projection[breakevenPoint - 1] : null;
+  const stayDuration = projection.length > 1 ? projection[projection.length - 1].year : 0;
+  const breakevenData = breakevenPoint && projection[breakevenPoint] ? projection[breakevenPoint] : null;
 
   return (
     <div className="space-y-8">
