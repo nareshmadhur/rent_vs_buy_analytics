@@ -25,7 +25,6 @@ export default function AnalysisTool() {
   const form = useForm<AnalysisFormValues>({
     resolver: zodResolver(analysisSchema),
     mode: 'onChange',
-    // No default values to ensure the form starts empty
   });
 
   // Effect to load data from localStorage on initial mount
@@ -41,11 +40,15 @@ export default function AnalysisTool() {
         } else {
           // If saved data is invalid, remove it and start fresh
           localStorage.removeItem(LOCAL_STORAGE_KEY);
+          form.reset({}); // Reset to empty
         }
+      } else {
+        form.reset({}); // No saved data, start empty
       }
     } catch (error) {
       console.error("Failed to read from localStorage", error);
       localStorage.removeItem(LOCAL_STORAGE_KEY);
+      form.reset({}); // Error, start empty
     }
   }, [form]);
 
