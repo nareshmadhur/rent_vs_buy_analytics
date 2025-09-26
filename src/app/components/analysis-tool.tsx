@@ -53,7 +53,6 @@ export default function AnalysisTool() {
         title: "Invalid data",
         description: "Please check the form fields and try again.",
       });
-      console.error(validation.error.flatten().fieldErrors);
     }
   };
 
