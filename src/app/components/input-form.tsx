@@ -72,6 +72,25 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
     }
   };
 
+  const handleCostDefaults = (checked: boolean) => {
+    if (checked) {
+        form.setValue('interestRate', 4.1);
+        form.setValue('marginalTaxRate', 37);
+        if (!isFirstTimeBuyer) {
+            form.setValue('propertyTransferTaxPercentage', 2);
+        }
+        form.setValue('otherUpfrontCostsPercentage', 3);
+        form.setValue('maintenancePercentage', 1);
+    }
+  }
+
+  const handleProjectionDefaults = (checked: boolean) => {
+      if (checked) {
+          form.setValue('propertyAppreciationRate', 2.5);
+          form.setValue('estimatedSellingCostsPercentage', 2);
+      }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -184,6 +203,13 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                     </AccordionTrigger>
                     <AccordionContent className="pt-4">
                     <div className="space-y-6">
+                        <div className="rounded-lg border bg-background/50 p-4">
+                            <div className="flex flex-row items-center justify-between">
+                                <LabelWithTooltip label="Load Market Defaults" tooltip="Check this to fill this section with common, market-standard rates for a quick analysis." />
+                                <Switch onCheckedChange={handleCostDefaults} />
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField control={form.control} name="interestRate" render={({ field }) => (
                             <FormItem>
@@ -272,6 +298,13 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                     </AccordionTrigger>
                     <AccordionContent className="pt-4">
                     <div className="space-y-6">
+                        <div className="rounded-lg border bg-background/50 p-4">
+                            <div className="flex flex-row items-center justify-between">
+                                <LabelWithTooltip label="Load Market Defaults" tooltip="Check this to fill this section with common, long-term projection rates." />
+                                <Switch onCheckedChange={handleProjectionDefaults} />
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField control={form.control} name="intendedLengthOfStay" render={({ field }) => (
                             <FormItem>
