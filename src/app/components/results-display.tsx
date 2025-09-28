@@ -238,56 +238,79 @@ export default function ResultsDisplay({ results, errors }: ResultsDisplayProps)
                 <ProjectionChart data={projection} breakevenYear={breakevenPoint} investmentBreakevenYear={investmentBreakevenPoint} />
             </div>
 
-             <div className={breakevenPoint ? "bg-secondary/50 dark:bg-secondary/20 border-l-4 border-primary p-4 rounded-r-lg" : "bg-amber-100 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-r-lg"}>
-                <div className="flex items-start gap-3">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <HelpCircle className="w-5 h-5 text-muted-foreground mt-1" />
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs">
-                                <p>The "True Breakeven" is the year when the total cost of renting finally exceeds the total net cost of owning. The net cost of owning is your total cash payments (upfront costs + monthly costs) <span className="font-bold">minus</span> the cash you would get back if you sold the house (equity + appreciation - selling costs).</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <div>
-                        <h4 className="font-semibold">How to Read the "True Breakeven" Point</h4>
-                        <p className={`text-sm mt-1 mb-3 ${breakevenPoint ? "text-muted-foreground" : "text-amber-800 dark:text-amber-300"}`}>
-                            {breakevenPoint && breakevenData
-                                ? `Buying becomes cheaper than renting in Year ${breakevenPoint}. Here is the math for that year:`
-                                : `Buying does not financially break even with renting within your ${stayDuration}-year timeline.`}
-                        </p>
-                        {breakevenPoint && breakevenData && (
-                            <div className="text-xs space-y-2 text-muted-foreground">
-                            <div className="flex justify-between">
-                                <span>Total Rent Paid by Year {breakevenPoint}:</span>
-                                <span className="font-medium text-foreground">{formatCurrency(breakevenData.cumulativeRentingCost)}</span>
-                            </div>
-                            <div className="border-t pt-2 mt-2">
-                                <div className="flex justify-between">
-                                <span>Total Buying Costs Paid (cash):</span>
-                                <span className="font-medium text-foreground">{formatCurrency(breakevenData.cumulativeBuyingCost)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                <span>- Est. Value from Sale:</span>
-                                <span className="font-medium text-green-600">-{formatCurrency(breakevenData.propertyValue - breakevenData.totalNetOwnershipCost - totalUpfrontCosts)}</span>
-                                </div>
-                                <div className="border-t my-1"></div>
-                                <div className="flex justify-between font-bold">
-                                <span>= True Cost of Owning:</span>
-                                <span className="text-foreground">{formatCurrency(breakevenData.totalNetOwnershipCost)}</span>
-                                </div>
-                            </div>
-                            <p className="text-xs pt-2">
-                                At this point, the True Cost of Owning ({formatCurrency(breakevenData.totalNetOwnershipCost)}) becomes less than the Total Rent Paid ({formatCurrency(breakevenData.cumulativeRentingCost)}).
+             <div className="space-y-4">
+                {/* Explanation for Rent vs Buy Breakeven */}
+                <div className={breakevenPoint ? "bg-secondary/50 dark:bg-secondary/20 border-l-4 border-primary p-4 rounded-r-lg" : "bg-amber-100 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-r-lg"}>
+                    <div className="flex items-start gap-3">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <HelpCircle className="w-5 h-5 text-primary mt-1" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                    <p>The "Rent vs. Buy Breakeven" is the year when the total cost of renting finally exceeds the total net cost of owning. The net cost of owning is your total cash payments (upfront costs + monthly costs) <span className="font-bold">minus</span> the cash you would get back if you sold the house (equity + appreciation - selling costs).</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <div>
+                            <h4 className="font-semibold text-primary">How to Read the Rent vs. Buy Breakeven Point</h4>
+                            <p className={`text-sm mt-1 mb-3 ${breakevenPoint ? "text-muted-foreground" : "text-amber-800 dark:text-amber-300"}`}>
+                                {breakevenPoint && breakevenData
+                                    ? `Buying becomes cheaper than renting in Year ${breakevenPoint}. Here is the math for that year:`
+                                    : `Buying does not financially break even with renting within your ${stayDuration}-year timeline.`}
                             </p>
-                            </div>
-                        )}
-                        {!breakevenPoint && (
-                            <p className="text-xs text-muted-foreground">
-                            Based on your projections, the high upfront costs of buying are not recovered through equity and appreciation within your planned stay, making renting the cheaper option over this period.
+                            {breakevenPoint && breakevenData && (
+                                <div className="text-xs space-y-2 text-muted-foreground">
+                                <div className="flex justify-between">
+                                    <span>Total Rent Paid by Year {breakevenPoint}:</span>
+                                    <span className="font-medium text-foreground">{formatCurrency(breakevenData.cumulativeRentingCost)}</span>
+                                </div>
+                                <div className="border-t pt-2 mt-2">
+                                    <div className="flex justify-between">
+                                    <span>Total Buying Costs Paid (cash):</span>
+                                    <span className="font-medium text-foreground">{formatCurrency(breakevenData.cumulativeBuyingCost)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                    <span>- Est. Value from Sale:</span>
+                                    <span className="font-medium text-green-600">-{formatCurrency(breakevenData.cumulativeBuyingCost - breakevenData.totalNetOwnershipCost)}</span>
+                                    </div>
+                                    <div className="border-t my-1"></div>
+                                    <div className="flex justify-between font-bold">
+                                    <span>= True Cost of Owning:</span>
+                                    <span className="text-foreground">{formatCurrency(breakevenData.totalNetOwnershipCost)}</span>
+                                    </div>
+                                </div>
+                                <p className="text-xs pt-2">
+                                    At this point, the True Cost of Owning ({formatCurrency(breakevenData.totalNetOwnershipCost)}) becomes less than the Total Rent Paid ({formatCurrency(breakevenData.cumulativeRentingCost)}).
+                                </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Explanation for Investment Breakeven */}
+                <div className={investmentBreakevenPoint ? "bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 rounded-r-lg" : "bg-secondary/50 dark:bg-secondary/20 border-l-4 border-gray-400 p-4 rounded-r-lg"}>
+                    <div className="flex items-start gap-3">
+                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                     <HelpCircle className={`w-5 h-5 mt-1 ${investmentBreakevenPoint ? "text-green-600" : "text-muted-foreground"}`} />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                    <p>The "Investment Breakeven" is the year when the profit from selling the house would be enough to cover all the cash you've paid over the years (upfront costs, mortgage payments, etc.). It's the point where your net cost of ownership becomes zero or less, effectively meaning you've "lived for free."</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <div>
+                             <h4 className={`font-semibold ${investmentBreakevenPoint ? "text-green-700 dark:text-green-300" : ""}`}>The Investment Breakeven Point</h4>
+                            <p className="text-sm mt-1 text-muted-foreground">
+                                {investmentBreakevenPoint
+                                    ? `In Year ${investmentBreakevenPoint}, the profit from selling your home would be enough to cover all your ownership costs.`
+                                    : `Within your ${stayDuration}-year timeline, you would not reach a point where selling the home covers all your expenses.`
+                                }
                             </p>
-                        )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -298,3 +321,5 @@ export default function ResultsDisplay({ results, errors }: ResultsDisplayProps)
     </div>
   );
 }
+
+    
