@@ -64,14 +64,16 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
   }, [isFirstTimeBuyer, form]);
   
   const handleNumericChange = (field: any, value: string) => {
-    if (value === '' || value === '-') {
-      field.onChange(undefined);
-    } else {
-      const num = parseFloat(value);
-      field.onChange(isNaN(num) ? undefined : num);
+    // This allows clearing the field. An empty string will be coerced to undefined by Zod.
+    if (value === "") {
+        field.onChange(undefined);
+        return;
     }
+    const num = parseFloat(value);
+    // Let react-hook-form and Zod handle the NaN case during validation.
+    field.onChange(num);
   };
-
+  
   const handleCostDefaults = (checked: boolean) => {
     if (checked) {
         form.setValue('interestRate', 4.1);
@@ -113,6 +115,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                 <FormControl>
                                 <Input type="number" placeholder="e.g., 30" {...field} onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
+                                <FormMessage />
                             </FormItem>
                             )} />
                             <FormField control={form.control} name="employmentStatus" render={({ field }) => (
@@ -128,6 +131,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                     <SelectItem value="other">Other</SelectItem>
                                 </SelectContent>
                                 </Select>
+                                <FormMessage />
                             </FormItem>
                             )} />
                             <FormField control={form.control} name="annualIncome" render={({ field }) => (
@@ -139,6 +143,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                     <Input type="number" placeholder="e.g., 60000" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
+                                <FormMessage />
                             </FormItem>
                             )} />
                             <FormField control={form.control} name="savings" render={({ field }) => (
@@ -150,6 +155,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                     <Input type="number" placeholder="e.g., 25000" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
+                                <FormMessage />
                             </FormItem>
                             )} />
                         </div>
@@ -170,6 +176,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                     <Input type="number" placeholder="e.g., 1500" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
+                                <FormMessage />
                             </FormItem>
                             )} />
                              <FormField control={form.control} name="maxMortgage" render={({ field }) => (
@@ -181,6 +188,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                     <Input type="number" placeholder="e.g., 300000" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
+                                <FormMessage />
                             </FormItem>
                             )} />
                              <FormField control={form.control} name="overbidAmount" render={({ field }) => (
@@ -192,6 +200,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                     <Input type="number" placeholder="e.g., 20000" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
+                                <FormMessage />
                             </FormItem>
                             )} />
                         </div>
@@ -220,6 +229,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                 <Input type="number" step="0.01" placeholder="e.g., 4.1" {...field} className="pr-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                             </div>
+                            <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="marginalTaxRate" render={({ field }) => (
@@ -231,6 +241,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                 <Input type="number" step="0.1" placeholder="e.g., 37" {...field} className="pr-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                             </div>
+                            <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="propertyTransferTaxPercentage" render={({ field }) => (
@@ -242,6 +253,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                 <Input type="number" step="0.1" placeholder="e.g., 2" {...field} className="pr-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} disabled={isFirstTimeBuyer} />
                                 </FormControl>
                             </div>
+                            <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="otherUpfrontCostsPercentage" render={({ field }) => (
@@ -253,6 +265,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                 <Input type="number" step="0.1" placeholder="e.g., 3" {...field} className="pr-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                             </div>
+                            <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="maintenancePercentage" render={({ field }) => (
@@ -264,6 +277,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                 <Input type="number" step="0.1" placeholder="e.g., 1" {...field} className="pr-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                             </div>
+                            <FormMessage />
                             </FormItem>
                         )} />
                         </div>
@@ -315,6 +329,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                     <Input type="number" placeholder="e.g., 10" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
+                                <FormMessage />
                             </FormItem>
                             )} />
                             <FormField control={form.control} name="propertyAppreciationRate" render={({ field }) => (
@@ -326,6 +341,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                     <Input type="number" step="0.1" placeholder="e.g., 2.5" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
+                                <FormMessage />
                             </FormItem>
                             )} />
                             <FormField control={form.control} name="estimatedSellingCostsPercentage" render={({ field }) => (
@@ -337,6 +353,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                     <Input type="number" step="0.1" placeholder="e.g., 2" {...field} className="pl-8" onChange={e => handleNumericChange(field, e.target.value)} value={field.value ?? ''} />
                                 </FormControl>
                                 </div>
+                                <FormMessage />
                             </FormItem>
                             )} />
                         </div>
@@ -365,6 +382,7 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
                                         <SelectItem value="couple">Couple / Fiscal Partner</SelectItem>
                                     </SelectContent>
                                     </Select>
+                                    <FormMessage />
                                 </FormItem>
                                 )} />
                             )}
@@ -395,3 +413,5 @@ export default function InputForm({ form, onClear, onLoadExample, onSubmit }: In
     </Card>
   );
 }
+
+    
