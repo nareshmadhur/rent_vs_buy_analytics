@@ -41,6 +41,7 @@ export type CalculationOutput = {
     // Stage 3: Long-term projection
     projection: YearlyProjection[];
     breakevenPoint: number | null; // This is now the "True Financial Breakeven"
+    investmentBreakevenPoint: number | null; // The "Living for Free" breakeven
     
     // Pass inputs through for display
     inputs: CalculationInput;
@@ -117,6 +118,7 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
     // C3.0 - C9.0: Long-Term Projection
     const projection: YearlyProjection[] = [];
     let breakevenPoint: number | null = null;
+    let investmentBreakevenPoint: number | null = null;
     
     // Year 0 State
     const initialPropertyValue = propertyValue + (data.overbidAmount || 0);
@@ -174,6 +176,11 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
         if (breakevenPoint === null && totalNetOwnershipCost < cumulativeRentingCost) {
             breakevenPoint = year;
         }
+
+        // Investment Breakeven (TNO <= 0)
+        if (investmentBreakevenPoint === null && totalNetOwnershipCost <= 0) {
+            investmentBreakevenPoint = year;
+        }
     }
     
     // Final realized value at end of term
@@ -199,6 +206,7 @@ export function performCalculations(data: CalculationInput): CalculationOutput {
         huurtoeslagAmount,
         projection,
         breakevenPoint,
+        investmentBreakevenPoint,
         realizedValueOnSale,
         inputs: data,
     };

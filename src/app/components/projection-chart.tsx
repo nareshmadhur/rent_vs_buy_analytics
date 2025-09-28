@@ -27,9 +27,10 @@ const chartConfig = {
 interface ProjectionChartProps {
   data: YearlyProjection[];
   breakevenYear: number | null;
+  investmentBreakevenYear: number | null;
 }
 
-export default function ProjectionChart({ data, breakevenYear }: ProjectionChartProps) {
+export default function ProjectionChart({ data, breakevenYear, investmentBreakevenYear }: ProjectionChartProps) {
   return (
     <ChartContainer config={chartConfig} className="min-h-[400px] w-full">
       <AreaChart
@@ -70,7 +71,7 @@ export default function ProjectionChart({ data, breakevenYear }: ProjectionChart
             strokeWidth={2}
           >
             <ReferenceLine.Label
-              value="Breakeven"
+              value="Rent vs. Buy Breakeven"
               position="insideTop"
               fill="hsl(var(--primary))"
               fontSize={12}
@@ -78,6 +79,24 @@ export default function ProjectionChart({ data, breakevenYear }: ProjectionChart
             />
           </ReferenceLine>
         )}
+        
+        {investmentBreakevenYear && investmentBreakevenYear > 0 && (
+          <ReferenceLine
+            x={investmentBreakevenYear}
+            stroke="hsl(var(--chart-3))"
+            strokeDasharray="3 3"
+            strokeWidth={2}
+          >
+            <ReferenceLine.Label
+              value="Investment Breakeven"
+              position="insideTop"
+              fill="hsl(var(--chart-3))"
+              fontSize={12}
+              offset={30}
+            />
+          </ReferenceLine>
+        )}
+
 
         {/* This represents the "true" cost of ownership after realizing the asset */}
         <Area

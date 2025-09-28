@@ -132,6 +132,7 @@ export default function ResultsDisplay({ results, errors }: ResultsDisplayProps)
     netMonthlyRentalCost,
     projection,
     breakevenPoint,
+    investmentBreakevenPoint,
     monthlyInterest,
     monthlyPrincipal,
     monthlyMaintenance,
@@ -234,7 +235,7 @@ export default function ResultsDisplay({ results, errors }: ResultsDisplayProps)
         </CardHeader>
         <CardContent className="space-y-6">
             <div className="min-h-[400px]">
-                <ProjectionChart data={projection} breakevenYear={breakevenPoint} />
+                <ProjectionChart data={projection} breakevenYear={breakevenPoint} investmentBreakevenYear={investmentBreakevenPoint} />
             </div>
 
              <div className={breakevenPoint ? "bg-secondary/50 dark:bg-secondary/20 border-l-4 border-primary p-4 rounded-r-lg" : "bg-amber-100 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-r-lg"}>
