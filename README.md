@@ -1,3 +1,4 @@
+
 # Hypotheek Analyse: A Dutch Rent vs. Buy Calculator
 
 This tool provides a detailed financial analysis to help users in the Netherlands compare the costs and benefits of buying a home versus continuing to rent. It moves beyond simple gross comparisons to provide a realistic, net-cost analysis over time, including key Dutch tax laws, upfront costs, and long-term wealth generation.
@@ -34,8 +35,9 @@ The answer is rarely simple. This tool helps you understand the trade-offs by an
 
 3.  **The Finish Line: What is the long-term financial outcome?**
     *   Projects your finances over the number of years you plan to live in the home.
-    *   **The "True" Breakeven Point:** It calculates the exact year when the total financial benefit of owning (including the value of your home) surpasses the total cost of renting.
-    *   **Wealth Generation:** It shows how much wealth (equity) you are building in your home each month and the potential cash profit you could make if you sell the property at the end of your planned stay.
+    *   **The "True" Breakeven Point:** It calculates the exact year when the total financial benefit of owning surpasses the total cost of renting.
+    *   **The "Investment" Breakeven Point:** It also shows if and when you reach the point where selling the home would cover *all* your costs, effectively meaning you've "lived for free."
+    *   **Wealth Generation:** It shows the potential cash profit you could make if you sell the property at the end of your planned stay.
 
 ---
 
@@ -52,7 +54,7 @@ The results display is structured to tell a financial story that is both immedia
 2.  **Chronological Journey:** After the verdict, the results unfold in the order a user would experience them financially:
     *   **The Starting Line:** Focuses on the initial, one-time investment required to buy the house. It answers the user's first question: "What do I need to pay on day one?".
     *   **The Daily Race:** Details the recurring monthly costs. This section uses a stacked bar chart (`CostComparisonChart`) to visually compare the components of buying vs. renting.
-    *   **The Finish Line:** Consolidates the long-term view, showing wealth accumulation over time. It features the projection chart (`ProjectionChart`) and a detailed explanation of the breakeven calculation, linking the visual to the underlying math.
+    *   **The Finish Line:** Consolidates the long-term view, showing wealth accumulation over time. It features the projection chart (`ProjectionChart`) and a detailed explanation of the two breakeven calculations, linking the visuals to the underlying math.
 
 This structure prevents information overload and builds the user's understanding step-by-step.
 
@@ -65,7 +67,7 @@ To maintain the project's clarity and modularity, please adhere to the following
 *   `src/app/components/analysis-tool.tsx`: This is the **primary stateful client component**.
     *   It is responsible for orchestrating the entire user experience.
     *   It manages the main application state, including form data and calculation results.
-    *   It uses `react-hook-form` for efficient form state management and `localStorage` to persist user inputs across sessions.
+    *   It uses `react-hook-form` for efficient form state management.
     *   It passes down form control to `InputForm` and calculation results to `ResultsDisplay`.
 
 *   `src/app/components/input-form.tsx`: This component manages all user inputs.
@@ -110,7 +112,7 @@ The financial model is implemented in `src/lib/calculations.ts`. Below are the k
 
 2.  **Monthly Tax Benefit (MID)**
     *   **Purpose:** Models the *Hypotheekrenteaftrek*. The interest portion of the mortgage payment is tax-deductible against your income.
-    *   **Formula:** `Benefit = (M * r) * T_m`
+    *   **Formula:** `Benefit = (Interest Portion of Payment) * T_m`
     *   Note: This uses the interest of the *first month* as a simplification for the entire term. A more complex model would recalculate this as the interest portion decreases over time.
 
 3.  **Monthly EWF Cost**
@@ -131,7 +133,7 @@ The financial model is implemented in `src/lib/calculations.ts`. Below are the k
 1.  **Total Upfront Costs**
     *   **Purpose:** The total cash required on day one, which must be covered by savings.
     *   **Formula:** `Upfront = (Transfer Tax) + (Other Costs) + O`
-    *   `Transfer Tax` is `P * 2%` (or 0% if `isFirstTimeBuyer`). `Other Costs` are typically a percentage of `P`. The `Overbid (O)` is a direct cash cost.
+    *   `Transfer Tax` is `P * 2%` (or 0% if `isFirstTimeBuyer`). `Other Costs` are a percentage of `P`. The `Overbid (O)` is a direct cash cost.
 
 2.  **Cumulative Buying Cost (CBC)**
     *   **Purpose:** Tracks the total cash that has left the user's pocket over time.
@@ -139,7 +141,7 @@ The financial model is implemented in `src/lib/calculations.ts`. Below are the k
 
 3.  **Realized Value on Sale**
     *   **Purpose:** Calculates the net cash a user would receive if they sold the house in a given year.
-    *   **Formula:** `Value = (Accumulated Equity) - (Selling Costs)`
+    *   **Formula:** `Value_y = (Accumulated Equity_y) - (Selling Costs_y)`
         *   `Accumulated Equity`: `(Property Value_y) - (Remaining Mortgage_y)`
         *   `Property Value_y` grows based on the `propertyAppreciationRate`.
 
@@ -147,8 +149,13 @@ The financial model is implemented in `src/lib/calculations.ts`. Below are the k
     *   **Purpose:** This is the *true* cost of owning the home over a period, accounting for the fact that the home is an asset you can liquidate.
     *   **Formula (for Year `y`):** `TNO_y = (CBC_y) - (Realized Value on Sale_y)`
 
-5.  **True Financial Breakeven Point**
-    *   **Purpose:** To find the year where owning becomes financially superior to renting.
-    *   **Logic:** The breakeven year is the first year `y` where:
-        *   `TNO_y < Cumulative Renting Cost_y`
-    *   In other words, it's the point where the total *net* cost of ownership (after accounting for the asset you've built) becomes less than the total money "lost" to rent.
+5.  **Breakeven Points (The Two Finish Lines)**
+    *   **Purpose:** To find the years where key financial milestones are met.
+    *   **1. True Financial Breakeven:** This is the year where owning becomes financially superior to renting.
+        *   **Logic:** The first year `y` where: `TNO_y < Cumulative Renting Cost_y`
+        *   In other words, it's the point where the total *net* cost of ownership (after accounting for the asset you've built) becomes less than the total money "lost" to rent.
+    *   **2. Investment Breakeven:** This is the year where the profit from selling is enough to cover all ownership costs, effectively meaning you've "lived for free."
+        *   **Logic:** The first year `y` where: `TNO_y <= 0`
+        *   This happens when the `Realized Value on Sale` becomes greater than or equal to your `Cumulative Buying Cost`.
+
+    
