@@ -141,6 +141,8 @@ export default function ResultsDisplay({ results, errors }: ResultsDisplayProps)
 
   const stayDuration = projection.length > 1 ? projection[projection.length - 1].year : 0;
   const breakevenData = breakevenPoint && projection[breakevenPoint] ? projection[breakevenPoint] : null;
+  const remainingSavings = results.inputs.savings - totalUpfrontCosts;
+  const hasEnoughSavings = remainingSavings >= 0;
 
   return (
     <div className="space-y-8">
@@ -167,10 +169,10 @@ export default function ResultsDisplay({ results, errors }: ResultsDisplayProps)
             />
              <StatCard 
                 title="Remaining Savings"
-                value={formatCurrency(results.inputs.savings - totalUpfrontCosts)}
-                description="After all initial costs are paid."
+                value={formatCurrency(remainingSavings)}
+                description={hasEnoughSavings ? "This is your cash buffer after all costs are paid." : "Uh-oh! You may not have enough savings to cover the initial investment."}
                 icon={PiggyBank}
-                colorClass={(results.inputs.savings - totalUpfrontCosts) >= 0 ? "text-green-500" : "text-red-500"}
+                colorClass={hasEnoughSavings ? "text-green-500" : "text-red-500"}
             />
         </CardContent>
       </Card>
@@ -182,7 +184,7 @@ export default function ResultsDisplay({ results, errors }: ResultsDisplayProps)
                 <Scale className="w-6 h-6 text-primary"/>
                 <CardTitle>The Daily Race: Net Monthly Cost Comparison</CardTitle>
             </div>
-          <CardDescription>Visualizing your initial monthly housing expenses after all tax and subsidy adjustments.</CardDescription>
+          <CardDescription>Visualizing your first month's housing expenses after all tax and subsidy adjustments.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
             <div className="min-h-[400px]">
@@ -248,7 +250,7 @@ export default function ResultsDisplay({ results, errors }: ResultsDisplayProps)
                         </Tooltip>
                     </TooltipProvider>
                     <div>
-                        <h4 className="font-semibold">How to Read the "True Breakeven"</h4>
+                        <h4 className="font-semibold">How to Read the "True Breakeven" Point</h4>
                         <p className={`text-sm mt-1 mb-3 ${breakevenPoint ? "text-muted-foreground" : "text-amber-800 dark:text-amber-300"}`}>
                             {breakevenPoint && breakevenData
                                 ? `Buying becomes cheaper than renting in Year ${breakevenPoint}. Here is the math for that year:`
