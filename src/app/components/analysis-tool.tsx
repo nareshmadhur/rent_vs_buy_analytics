@@ -9,7 +9,6 @@ import { performCalculations, type CalculationOutput } from '@/lib/calculations'
 import InputForm from './input-form';
 import ResultsDisplay from './results-display';
 import { useToast } from '@/hooks/use-toast';
-import type { FieldErrors } from 'react-hook-form';
 
 const exampleData: AnalysisFormValues = {
   age: 30,
@@ -57,27 +56,7 @@ export default function AnalysisTool() {
   };
 
   const handleClearForm = useCallback(() => {
-    form.reset({
-        age: undefined,
-        annualIncome: undefined,
-        employmentStatus: undefined,
-        savings: undefined,
-        currentRentalExpenses: undefined,
-        maxMortgage: undefined,
-        overbidAmount: undefined,
-        interestRate: undefined,
-        propertyTransferTaxPercentage: undefined,
-        otherUpfrontCostsPercentage: undefined,
-        maintenancePercentage: undefined,
-        isFirstTimeBuyer: false,
-        marginalTaxRate: undefined,
-        midEligible: true,
-        intendedLengthOfStay: undefined,
-        propertyAppreciationRate: undefined,
-        estimatedSellingCostsPercentage: undefined,
-        isEligibleForHuurtoeslag: false,
-        householdSize: undefined,
-    }); 
+    form.reset({}); 
     setResults(null);
     toast({
       title: "Form Cleared",
